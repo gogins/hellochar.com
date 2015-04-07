@@ -18,7 +18,7 @@
             var p = x.clone().floor();
             var f = x.clone().sub(p);
 
-            // f = f*f*(3.0-2.0*f);
+            var f = f.clone().multiply(f).multiply(f.clone().multiplyScalar(-2.0).addScalar(3.0));
 
             var n = p.x + p.y*57.0 + 113.0*p.z;
 
@@ -29,43 +29,51 @@
             return res;
         }
 
-        // x = Vector2
+        // x = Vector3
+        // returns [scalar, Vector3 corresponding to offset]
         function noised( x ) {
             var p = x.clone().floor();
             var f = x.clone().sub(p);
 
-            // var u = f*f*(3.0-2.0*f);
-            var u = f;
+            var u = f.clone().multiply(f).multiply(f.clone().multiplyScalar(-2.0).addScalar(3.0));
 
-            var n = p.x + p.y*57.0;
+            var n = p.x + p.y*57.0 + p.z*113.0;
 
-            var a = hash(n+  0.0);
-            var b = hash(n+  1.0);
-            var c = hash(n+ 57.0);
-            var d = hash(n+ 58.0);
+            var a = hash(n + 0.0);
+            var b = hash(n + 1.0);
+            var c = hash(n + 57.0);
+            var d = hash(n + 58.0);
+            var e = hash(n + 113.0);
+            var g = hash(n + 114.0);
 
-            var yz = f.clone().multiplyScalar(30.0);
-            yz.multiply(f);
-            yz.multiply(f.clone().multiply(f.clone().addScalar(-2)).addScalar(1.0));
-            yz.multiply(new THREE.Vector2(b-a, c-a).add(new THREE.Vector2(u.y, u.x).multiplyScalar(a-b-c+d)));
-            return new THREE.Vector3(
-                    a+(b-a)*u.x+(c-a)*u.y+(a-b-c+d)*u.x*u.y,
-                    yz.x,
-                    yz.y);
+            var scalar = a+(b-a+e)*u.x+(c-a+g)*u.y+(d-a-b)*u.z+(a-b-c-g+d+e)*u.x*u.y*u.z;
+
+            var offset = f.clone();
+            offset.multiply(f);
+            offset.multiply(f.clone().multiply(f.clone().addScalar(-2)).addScalar(1.0));
+            offset.multiply(new THREE.Vector3(b-a+e, c-a+g, d-a-b).add(new THREE.Vector3(u.z, u.y, u.x).multiplyScalar(a-b-c-g+d+e)));
+            offset.multiplyScalar(30);
+            return [scalar, offset];
         }
 
-        // x = Vector2
+        var positionTransform = new THREE.Matrix4().makeRotationX(36).multiply(
+                                new THREE.Matrix4().makeRotationY(36)).multiply(
+                                new THREE.Matrix4().makeRotationZ(-36)).multiply(
+                                new THREE.Matrix4().makeScale(2, 2, 2));
+        // x = Vector3
         function terrain( x ) {
-            var p = x.clone().multiplyScalar(0.003);
+            var p = x.clone().multiplyScalar(0.03);
             var a = 0.0;
             var b = 1.0;
-            var d = new THREE.Vector2(0, 0);
+            var d = new THREE.Vector3(0, 0, 0);
             for(var i = 0; i < 5; i++) {
-                var n = noised(p);
-                d.add(new THREE.Vector2(n.y, n.z));
-                a += b*n.x/(1.0+d.lengthSq());
+                var retVal = noised(p);
+                var scalar = retVal[0];
+                var n = retVal[1];
+                d.add(n);
+                a += b*scalar/(1.0+d.lengthSq());
                 b *= 0.5;
-                p = new THREE.Vector2(1.6*p.x - 1.2 * p.y, 1.2 * p.x + 1.6 * p.y);
+                p.applyMatrix4(positionTransform);
             }
 
             return 140.0*a;
@@ -78,7 +86,7 @@
         };
     })();
 
-    var scene, camera, renderer;
+    var scene, camera, controls, renderer;
 
     var worldMesh;
 
@@ -88,11 +96,17 @@
         camera = new THREE.PerspectiveCamera(60, _renderer.domElement.width / _renderer.domElement.height, 1, 120000);
         camera.position.set(0, 0, 50000);
 
+        controls = new THREE.OrbitControls(camera);
+        controls.damping = 0.2;
+
         var geometry = new THREE.BoxGeometry(2, 2, 2, 100, 100, 100);
         geometry.vertices.forEach(function (vertex) {
             vertex.normalize();
-            var noise = TerrainGen.terrain(new THREE.Vector2(vertex.x * 1000, vertex.y * 1000));
-            vertex.normalize().multiplyScalar(20000 + 100 * noise);
+            var noise = TerrainGen.terrain(vertex.clone().multiplyScalar(100));
+            // var noisedRet = TerrainGen.noised(vertex.clone().multiplyScalar(100));
+            // var scalar = noisedRet[0];
+            // var offset = noisedRet[1];
+            vertex.normalize().multiplyScalar(20000 + 10 * noise);
         });
         geometry.computeFaceNormals();
         var material = new THREE.MeshLambertMaterial({
@@ -121,7 +135,8 @@
     }
 
     function animate(timeStep) {
-        camera.position.set(50000 * Math.cos(Date.now() / 1000), 50000 * Math.sin(Date.now() / 1000), 50000);
+        // camera.position.set(50000 * Math.cos(Date.now() / 1000), 50000 * Math.sin(Date.now() / 1000), 50000);
+        controls.update();
         camera.lookAt(new THREE.Vector3());
         renderer.render(scene, camera);
     }
