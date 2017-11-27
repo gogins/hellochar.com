@@ -10,6 +10,7 @@ import { Cymatics } from "./sketches/cymatics";
 import { Dots } from "./sketches/dots";
 import { Flame } from "./sketches/flame";
 import { Line } from "./sketches/line";
+import { NeuralNet } from "./sketches/neural_net";
 import { Waves } from "./sketches/waves";
 
 import "./index.scss";
@@ -41,6 +42,7 @@ ReactDOM.render(
                 <Route path="/waves" component={() => <FullPageSketch sketch={Waves} />} />
                 <Route path="/cymatics" component={() => <FullPageSketch sketch={Cymatics} />} />
                 <Route path="/flame" component={() => <FullPageSketch sketch={Flame} />} />
+                <Route path="/nn" component={() => <FullPageSketch sketch={NeuralNet} />} />
                 <Route path="/" component={HomePage} />
             </Switch>
         </div>
