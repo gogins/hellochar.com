@@ -112,7 +112,10 @@ output.setValueFromSources();
 const netValue = output.value;
 const trainingValue = trainingData[0].output;
 
-const diff = Math.abs(trainingValue - netValue);
+// so if netValue is 0.5 and trainingValue is 1, diff is 0.5. We want to netValue + diff = trainingValue
+// so we want to push netValue in diff's direction.
+// so how do we do this? We need to modify the weights of the hidden layer -> output
+const diff = trainingValue - netValue;
 
 function init() {
 
