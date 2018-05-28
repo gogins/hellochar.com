@@ -309,9 +309,10 @@ class FlameNameInput extends React.Component<{ onInput: (newName: string) => voi
             <div className="flame-input">
                 <input
                     defaultValue={nameFromSearch}
-                    placeholder="Han"
+                    placeholder="0123"
                     maxLength={20}
                     onInput={this.handleInput}
+                    style={{display: 'none'}}
                 />
             </div>
         );
