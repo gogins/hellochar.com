@@ -126,30 +126,16 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     private handleContainerRef = (ref: HTMLDivElement | null) => {
         if (ref != null) {
             try {
-                // create dependencies, setup sketch, and move to success state
-                // we are responsible for live-updating the global user volume.
+                // create dependencies, setup sketch, and move to success state.
                 const audioContext = this.audioContext = new AudioContext() as SketchAudioContext;
                 (THREE.AudioContext as any).setContext(audioContext);
-                this.userVolume = audioContext.createGain();
-                this.userVolume.gain.setValueAtTime(0.8, 0);
-                this.userVolume.connect(audioContext.destination);
-                const audioContextGain = audioContext.gain = audioContext.createGain();
-                audioContextGain.connect(this.userVolume);
-                document.addEventListener("visibilitychange", this.handleVisibilityChange);
-
                 const renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true, antialias: true });
                 ref.appendChild(renderer.domElement);
-
                 const sketch = new (this.props.sketchClass)(renderer, this.audioContext);
                 this.setState({status: { type: "success", sketch: sketch }});
             } catch (e) {
                 this.setState({ status: { type: "error", error: e }});
                 console.error(e);
-            }
-        } else {
-            document.removeEventListener("visibilitychange", this.handleVisibilityChange);
-            if (this.audioContext != null) {
-                this.audioContext.close();
             }
         }
     }
@@ -168,7 +154,6 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         return (
             <div {...containerProps} id={this.props.sketchClass.id} className="sketch-component" ref={this.handleContainerRef}>
                 {this.renderSketchOrStatus()}
-                {this.renderVolumeButton()}
             </div>
         );
     }
@@ -182,41 +167,11 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             return (
                 <p className="sketch-error">
                     Oops - something went wrong! Make sure you're using Chrome, or are on your desktop.
-                    <p><Link className="back" to="/">Back</Link></p>
                     {status.error.message}
                 </p>
             );
         } else if (status.type === "loading") {
             return null;
-        }
-    }
-
-    private renderVolumeButton() {
-        const { volumeEnabled } = this.state;
-        const volumeElementClassname = classnames("fa", {
-            "fa-volume-off": !volumeEnabled,
-            "fa-volume-up": volumeEnabled,
-        });
-        return (
-            <button className="user-volume" onClick={this.handleVolumeButtonClick}>
-                <i className={volumeElementClassname} aria-hidden="true" />
-            </button>
-        );
-    }
-
-    private handleVolumeButtonClick = () => {
-        const volumeEnabled = !this.state.volumeEnabled;
-        this.setState({ volumeEnabled });
-        window.localStorage.setItem("sketch-volumeEnabled", JSON.stringify(volumeEnabled));
-    }
-
-    private handleVisibilityChange = () => {
-        if (this.audioContext != null) {
-            if (document.hidden) {
-                this.audioContext.suspend();
-            } else {
-                this.audioContext.resume();
-            }
         }
     }
 }
