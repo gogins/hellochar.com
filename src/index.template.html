@@ -10,9 +10,7 @@
         <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta http-equiv="Pragma" content="no-cache" />
         <meta http-equiv="Expires" content="0" />
-        <script src="silencio/js/system.js"></script>
         <script src="csound_samples.js"></script>
-        <script src="csound_extended.js"></script> 
         <script src="CsoundAudioNode.js"></script>
         <script src="csound_loader.js"></script>
         <script src="silencio/js/Silencio.js"></script>
@@ -21,7 +19,6 @@
         <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/sprintf/1.1.1/sprintf.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.js"></script>
-        <script src="silencio/js/clubber.js"></script>
         <style>
             ::-webkit-scrollbar
             {
@@ -100,29 +97,6 @@ gkaccelerometerx init 0
 gkaccelerometery init 0
 gkaccelerometerz init 0
 
-#ifdef FLTK
-FLpanel "Csound 6", 510, 580, 150, 150
-gkslider1, ihslider1 FLslider "slider1", 0, 1, 0, 23, -1, 500, 20, 5, 5
-FLsetVal_i 1, ihslider1
-gkslider2, ihslider2 FLslider "slider2", 0, 1, 0, 23, -1, 500, 20, 5, 55
-FLsetVal_i 0.5, ihslider2
-gkslider3, ihslider3 FLslider "slider3", 0, 1, 0, 23, -1, 500, 20, 5, 105
-FLsetVal_i (1-0.5)/(8-0.5), ihslider3
-gkslider4, ihslider4 FLslider "slider4", 0, 1, 0, 23, -1, 500, 20, 5, 155
-FLsetVal_i 0, ihslider4
-gkslider5, ihslider5 FLslider "slider5", 0, 1, 0, 23, -1, 500, 20, 5, 205
-FLsetVal_i 0, ihslider5
-gktrackpadx, gktrackpady, ihtrackpadx, ihtrackpady FLjoy "trackpad.x/trackpad.y", 0, 1, 0, 1, 0, 0, -1, -1, 500, 250, 5, 250
-FLsetVal_i 0.5, ihtrackpadx
-FLsetVal_i (0.75-0.5)/(1-0.5), ihtrackpady
-gkbutt1, ihbutt1 FLbutton "butt1", 1, 0, 21, 100, 40, 5, 530 , -1
-gkbutt2, ihbutt2 FLbutton "butt2", 1, 0, 21, 100, 40, 105, 530 , -1
-gkbutt3, ihbutt3 FLbutton "butt3", 1, 0, 21, 100, 40, 205, 530 , -1
-gkbutt4, ihbutt4 FLbutton "butt4", 1, 0, 21, 100, 40, 305, 530 , -1
-gkbutt5, ihbutt5 FLbutton "butt5", 1, 0, 21, 100, 40, 405, 530 , -1
-FLrun
-#endif
-
 connect "Bower", "outleft", "ReverbLeft", "inleft"
 connect "Bower", "outright", "ReverbRight", "inright"
 connect "Phaser", "outleft", "ReverbLeft", "inleft"
@@ -144,9 +118,7 @@ connect "Shiner", "outright", "ReverbRight", "inright"
 connect "ReverbLeft", "outleft", "MasterOutput", "inleft"
 connect "ReverbRight", "outright", "MasterOutput", "inright"
 
-#ifndef FLTK
 alwayson "Controls"
-#endif
 alwayson "VariablesForControls"
 alwayson "ReverbLeft"
 alwayson "ReverbRight"
@@ -557,227 +529,6 @@ gkReverbFeedback init 0.975
 gkDelayModulation init 0.875
 
 
-#ifdef CSOUNDQT
-
-instr ReverbLeft
-; p4 = gain of reverb. Adjust empirically
-; for desired reverb time. .6 gives
-; a good small "live" room sound, .8
-; a small hall, .9 a large hall,
-; .99 an enormous stone cavern.
-
-; p5 = amount of random pitch modulation
-; for the delay lines. 1 is the "normal"
-; amount, but this may be too high for
-; held pitches such as piano tones.
-; Adjust to taste.
-
-; p6 = cutoff frequency of lowpass filters
-; in feedback loops of delay lines,
-; in Hz. Lower cutoff frequencies results
-; in a sound with more high-frequency
-; damping.
-
-; 8 delay line FDN reverb, with feedback matrix based upon
-; physical modeling scattering junction of 8 lossless waveguides
-; of equal characteristic impedance. Based on Julius O. Smith III,
-; "A New Approach to Digital Reverberation using Closed Waveguide
-; Networks," Proceedings of the International Computer Music
-; Conference 1985, p. 47-53 (also available as a seperate
-; publication from CCRMA), as well as some more recent papers by
-; Smith and others.
-; Coded by Sean Costello, October 1999
-itone = 16000
-asignal inleta "inleft"
-afilt1 init 0
-afilt2 init 0
-afilt3 init 0
-afilt4 init 0
-afilt5 init 0
-afilt6 init 0
-afilt7 init 0
-afilt8 init 0
-idel1 = (2473.000/sr)
-idel2 = (2767.000/sr)
-idel3 = (3217.000/sr)
-idel4 = (3557.000/sr)
-idel5 = (3907.000/sr)
-idel6 = (4127.000/sr)
-idel7 = (2143.000/sr)
-idel8 = (1933.000/sr)
-; k1-k8 are used to add random pitch modulation to the
-; delay lines. Helps eliminate metallic overtones
-; in the reverb sound.
-k1 randi .001, 3.1, .06
-k2 randi .0011, 3.5, .9
-k3 randi .0017, 1.11, .7
-k4 randi .0006, 3.973, .3
-k5 randi .001, 2.341, .63
-k6 randi .0011, 1.897, .7
-k7 randi .0017, 0.891, .9
-k8 randi .0006, 3.221, .44
-; apj is used to calculate "resultant junction pressure" for
-; the scattering junction of 8 lossless waveguides
-.; of equal characteristic impedance. If you wish to
-; add more delay lines, simply add them to the following
-; equation, and replace the .25 by 2/N, where N is the
-; number of delay lines.
-apj = .25 * (afilt1 + afilt2 + afilt3 + afilt4 + afilt5 + afilt6 + afilt7 + afilt8)
-adum1 delayr 1
-adel1 deltapi idel1 + k1 * gkDelayModulation
- delayw asignal + apj - afilt1
-adum2 delayr 1
-adel2 deltapi idel2 + k2 * gkDelayModulation
- delayw asignal + apj - afilt2
-adum3 delayr 1
-adel3 deltapi idel3 + k3 * gkDelayModulation
- delayw asignal + apj - afilt3
-adum4 delayr 1
-adel4 deltapi idel4 + k4 * gkDelayModulation
- delayw asignal + apj - afilt4
-adum5 delayr 1
-adel5 deltapi idel5 + k5 * gkDelayModulation
- delayw asignal + apj - afilt5
-adum6 delayr 1
-adel6 deltapi idel6 + k6 * gkDelayModulation
- delayw asignal + apj - afilt6
-adum7 delayr 1
-adel7 deltapi idel7 + k7 * gkDelayModulation
- delayw asignal + apj - afilt7
-adum8 delayr 1
-adel8 deltapi idel8 + k8 * gkDelayModulation
- delayw asignal + apj - afilt8
-; 1st order lowpass filters in feedback
-; loops of delay lines.
-afilt1 tone adel1 * gkReverbFeedback, itone
-afilt2 tone adel2 * gkReverbFeedback, itone
-afilt3 tone adel3 * gkReverbFeedback, itone
-afilt4 tone adel4 * gkReverbFeedback, itone
-afilt5 tone adel5 * gkReverbFeedback, itone
-afilt6 tone adel6 * gkReverbFeedback, itone
-afilt7 tone adel7 * gkReverbFeedback, itone
-afilt8 tone adel8 * gkReverbFeedback, itone
-; The outputs of the delay lines are summed
-; and sent to the stereo outputs. This could
-; easily be modified for a 4 or 8-channel
-; sound system.
-aout1 = (afilt1 + afilt3 + afilt5 + afilt7)
-aout2 = (afilt2 + afilt4 + afilt6 + afilt8)
-aleft = aout1 + aout2
-; To the master output.
-outleta "outleft", aleft
-endin
-
-instr ReverbRight
-; p4 = gain of reverb. Adjust empirically
-; for desired reverb time. .6 gives
-; a good small "live" room sound, .8
-; a small hall, .9 a large hall,
-; .99 an enormous stone cavern.
-
-; p5 = amount of random pitch modulation
-; for the delay lines. 1 is the "normal"
-; amount, but this may be too high for
-; held pitches such as piano tones.
-; Adjust to taste.
-
-; p6 = cutoff frequency of lowpass filters
-; in feedback loops of delay lines,
-; in Hz. Lower cutoff frequencies results
-; in a sound with more high-frequency
-; damping.
-
-; 8 delay line FDN reverb, with feedback matrix based upon
-; physical modeling scattering junction of 8 lossless waveguides
-; of equal characteristic impedance. Based on Julius O. Smith III,
-; "A New Approach to Digital Reverberation using Closed Waveguide
-; Networks," Proceedings of the International Computer Music
-; Conference 1985, p. 47-53 (also available as a seperate
-; publication from CCRMA), as well as some more recent papers by
-; Smith and others.
-; Coded by Sean Costello, October 1999
-itone = 16000
-asignal inleta "inright"
-afilt1 init 0
-afilt2 init 0
-afilt3 init 0
-afilt4 init 0
-afilt5 init 0
-afilt6 init 0
-afilt7 init 0
-afilt8 init 0
-idel1 = (2473.000/sr)
-idel2 = (2767.000/sr)
-idel3 = (3217.000/sr)
-idel4 = (3557.000/sr)
-idel5 = (3907.000/sr)
-idel6 = (4127.000/sr)
-idel7 = (2143.000/sr)
-idel8 = (1933.000/sr)
-; k1-k8 are used to add random pitch modulation to the
-; delay lines. Helps eliminate metallic overtones
-; in the reverb sound.
-k1 randi .001, 3.1, .06
-k2 randi .0011, 3.5, .9
-k3 randi .0017, 1.11, .7
-k4 randi .0006, 3.973, .3
-k5 randi .001, 2.341, .63
-k6 randi .0011, 1.897, .7
-k7 randi .0017, 0.891, .9
-k8 randi .0006, 3.221, .44
-; apj is used to calculate "resultant junction pressure" for
-; the scattering junction of 8 lossless waveguides
-.; of equal characteristic impedance. If you wish to
-; add more delay lines, simply add them to the following
-; equation, and replace the .25 by 2/N, where N is the
-; number of delay lines.
-apj = .25 * (afilt1 + afilt2 + afilt3 + afilt4 + afilt5 + afilt6 + afilt7 + afilt8)
-adum1 delayr 1
-adel1 deltapi idel1 + k1 * gkDelayModulation
- delayw asignal + apj - afilt1
-adum2 delayr 1
-adel2 deltapi idel2 + k2 * gkDelayModulation
- delayw asignal + apj - afilt2
-adum3 delayr 1
-adel3 deltapi idel3 + k3 * gkDelayModulation
- delayw asignal + apj - afilt3
-adum4 delayr 1
-adel4 deltapi idel4 + k4 * gkDelayModulation
- delayw asignal + apj - afilt4
-adum5 delayr 1
-adel5 deltapi idel5 + k5 * gkDelayModulation
- delayw asignal + apj - afilt5
-adum6 delayr 1
-adel6 deltapi idel6 + k6 * gkDelayModulation
- delayw asignal + apj - afilt6
-adum7 delayr 1
-adel7 deltapi idel7 + k7 * gkDelayModulation
- delayw asignal + apj - afilt7
-adum8 delayr 1
-adel8 deltapi idel8 + k8 * gkDelayModulation
- delayw asignal + apj - afilt8
-; 1st order lowpass filters in feedback
-; loops of delay lines.
-afilt1 tone adel1 * gkReverbFeedback, itone
-afilt2 tone adel2 * gkReverbFeedback, itone
-afilt3 tone adel3 * gkReverbFeedback, itone
-afilt4 tone adel4 * gkReverbFeedback, itone
-afilt5 tone adel5 * gkReverbFeedback, itone
-afilt6 tone adel6 * gkReverbFeedback, itone
-afilt7 tone adel7 * gkReverbFeedback, itone
-afilt8 tone adel8 * gkReverbFeedback, itone
-; The outputs of the delay lines are summed
-; and sent to the stereo outputs. This could
-; easily be modified for a 4 or 8-channel
-; sound system.
-aout1 = (afilt1 + afilt3 + afilt5 + afilt7)
-aout2 = (afilt2 + afilt4 + afilt6 + afilt8)
-aright = aout1 + aout2
-outleta "outright", aright
-endin
-
-#else
-
 instr ReverbLeft
 aleft init 0
 azero init 0
@@ -793,8 +544,6 @@ aright inleta "inright"
 aleft, aright reverbsc azero, aright, gkReverbFeedback, 15000.0
 outleta "outright", aright
 endin
-
-#endif
 
 gkCenterHz init 200
 gkGain init 1
@@ -881,31 +630,8 @@ endin
 </CsInstruments>
 <CsScore>
 
-; Change the tempo, if you like.
-t 0 27
+f 0 360
 
-; p1 p2 p3 p4 p5 p6 p7 p8
-; insno onset duration fundamental numerator denominator velocity pan
-
-; C E B
-i 101 0 60 [1 * 60] 1 1 60 [-1 + 1 / 2]
-i 101 0 60 [2 * 60] 5 4 60 [-1 + 3 / 2]
-i 101 0 60 [3 * 60] 28 15 60 [-1 + 2 / 2]
-; C Ab E B
-i 104 30 30 [1 * 60] 8 5 60 [-1 + 2 / 2]
-; G F# B
-i 102 60 60 [1 * 60] 3 2 60 [-1 + 1 / 2]
-i 102 60 30 [2 * 60] 45 32 64 [-1 + 2 / 2]
-i 102 60 60 [3 * 60] 28 15 64 [-1 + 3 / 2]
-; G F B
-i 102 90 30 [2 * 60] 4 3 64 [-1 + 2 / 2]
-; C E B
-i 103 120 60 [1 * 60] 1 1 64 [-1 + 1 / 2]
-i 103 120 60 [2 * 60] 5 4 56 [-1 + 2 / 2]
-i 103 120 30 [3 * 60] 28 15 56 [-1 + 3 / 2]
-i 103 150 30 [4 * 60] 1 1 58 [-1 + 3 / 2]
-;i 103 120 60 [3 * 60] 1 1 56 [-1 + 3 / 2]
-e 10.0
 </CsScore>
 </CsoundSynthesizer>
    </textarea>
@@ -913,7 +639,11 @@ e 10.0
         var gui = null;
         var score_time_started = 0.;
         var score_time = 0.;
-        var clubber = null;
+        var chord = new ChordSpace.Chord([36, 48, 55, 59, 64]);
+        var modality = chord.clone();
+        console.log(chord.information());
+        var do_voiceleading = false;
+        var prior_chord = chord.clone();
         function csoundMessage(text) {
             var Log_cell = document.getElementById('console');
             Log_cell.value += text;
@@ -929,12 +659,7 @@ e 10.0
             }
             score_time = score_time_started - (new Date().getTime() / 1000);
             score_time_cell.innerHTML = score_time.toFixed(4);
-            //clubber.update(score_time * 1000);
-            clubber.update();
-            let regex = new RegExp(',', 'g');
-            let text = clubber.notes.toString().replace(regex, ' ');
-            flame.updateName(text);
-            setTimeout(updateTimeCell, 5000);
+            setTimeout(updateTimeCell, 1000);
         };
         var parameters = {
             gk_Bower_pressure: 0.25,
@@ -983,8 +708,8 @@ e 10.0
             Play: function() {
                 try {
                     csound = get_csound(csoundMessage);
-                    if (csound === null) {
-                        return;
+                    if (csound_audio_node === null) {
+                         return;
                     }
                     gui.revert();
                     let csd = document.getElementById('csd').value;
@@ -997,19 +722,8 @@ e 10.0
                     csound.CompileCsdText(csd);
                     csound.Start();
                     csound.Perform();
-                    //let options = ['-odac', '--ksmps=128', '--nchnls=2', '--nchnls_i=1', '--sample-rate=48000', '-m35', '-d']
-                    //csound.PerformCsd(options, csd);
                     score_time_started = new Date().getTime() / 1000;
                     setTimeout(updateTimeCell, 0);
-                    clubber = new Clubber({
-                        size: 2048, // Samples for the fourier transform. The produced linear frequency bins will be 1/2 that.
-                        mute: false, // whether the audio source should be connected to web audio context destination.
-                        context: csound.context
-                    });
-                    clubber.listen(csound); 
-                    clubber.update();
-                    //clubber.update(currentTime); // currentTime is optional and specified in milliseconds.
-                    console.log(clubber.notes); // This is the array containing the audio energy per midi note.
                 } catch (e) {
                     alert(e);
                 }
@@ -1025,54 +739,13 @@ e 10.0
                     console.log(e);
                 }
             },
-            FM9: function() {
-                chord = FM9.clone();
-                csound.Message('FM9:\n' + chord.information());
+            Hide: function() {
+                $("#dat_gui").toggle();
+                $("#statistics").toggle();
             },
-            Bb7: function() {
-                chord = Bb7.clone();
-                csound.Message('Bb7:\n' + chord.information());
+            PlayChord: function() {
             },
-            K: function() {
-                chord = chord.K();
-                csound.Message('K():\n' + chord.information());
-            },
-            Q2: function() {
-                chord = chord.Q(2, modality);
-                csound.Message('Q(2, modality):\n' + chord.information());
-            },
-            Q3: function() {
-                chord = chord.Q(3, modality);
-                csound.Message('Q(3, modality):\n' + chord.information());
-            },
-            Q5: function() {
-                chord = chord.Q(5, modality);
-                csound.Message('Q(5, modality):\n' + chord.information());
-            },
-            J2_2: function() {
-                var chords = chord.J(2);
-                if (chords.length > 1) {
-                    chord = chords[1];
-                    csound.Message('J(2,2):\n' + chord.information());
-                }
-            },
-            J2_3: function() {
-                var chords = chord.J(2);
-                if (chords.length > 2) {
-                    chord = chords[2];
-                    csound.Message('J(2,3):\n' + chord.information());
-                }
-            },
-            J3_1: function() {
-               var chords = chord.J(3);
-                if (chords.length > 0) {
-                    chord = chords[0];
-                    csound.Message('J(3,1):\n' + chord.information());
-                }
-            },
-            T5: function() {
-                chord = chord.T(5);
-                csound.Message('D():\n' + chord.information());
+            PlayChordWithVoiceleading: function() {
             },
         };        
         window.onload = function() {
@@ -1126,17 +799,6 @@ e 10.0
             add_slider(Sweeper, 'gk_Sweeper_britels', 0, 4);
             add_slider(Sweeper, 'gk_Sweeper_britehs', 0, 4);
             add_slider(Sweeper, 'gk_Sweeper_level', -80, 80);
-            var Chords = gui.addFolder('Chords and transformations')
-            Chords.add(parameters, 'Bb7');
-            Chords.add(parameters, 'FM9');
-            Chords.add(parameters, 'K').name('K() [Ctrl-K]');
-            Chords.add(parameters, 'Q2').name('Q(2)');
-            Chords.add(parameters, 'Q3').name('Q(3) [Ctrl-Q]');
-            Chords.add(parameters, 'Q5').name('Q(5)');
-            Chords.add(parameters, 'J2_2').name('J(2,2)');
-            Chords.add(parameters, 'J2_3').name('J(2,3)');
-            Chords.add(parameters, 'J3_1').name('J(3,1)');
-            Chords.add(parameters, 'T5').name('D() [Ctrl-D]');
             gui.revert();
             gui.domElement.id = 'dat_gui';
             //gui.id = "dat_gui";
@@ -1187,34 +849,43 @@ e 10.0
           var message = {data: data};
           logMessage(message);
         }
-        // The 'keydown' event is used for key bindings.
         $(document).on("keydown", function (e) {
             //printKey(e);
+            e.preventDefault();
+            e.stopPropagation();
             var e_char = String.fromCharCode(e.keyCode || e.charCode);
+            // Numbers (and pitch-classes) are 0 through b.
+            // Shift key changes from 1 to -1.
+            let sign;
+            if (e.shiftKey === true) {
+                sign = -1;
+            } else {
+                sign = 1;
+            }
+            let value;
+            value = e.which - 48;
+            if (value > 9) {
+                value -= 7;
+            }
+            value *= sign;
+            console.log('value:' + value);
             if (e.ctrlKey === true) {
                 if        (e_char === 'V') {
-                    $("#statistics").toggle();
-                    $("#dat_gui").toggle();
-                    //if (gui.style.display === 'none') {
-                    //    gui.style.display = 'block');
-                    //} else {
-                    //    gui.style.display = 'none');
-                    //}
+                    parameters.Hide();
                 } else if (e_char === 'K') {
-                    parameters.K();
-                } else if (e_char === 'Q') {
-                    parameters.Q3();
-                } else if (e_char === 'D') {
-                    parameters.T5();
-                } else if (e_char === 'T') {
-                    chord = chord.T(2);
+                    chord = chord.K(modality);
                 } else if (e_char === 'P') {
                     parameters.Play();
                 } else if (e_char === 'S') {
                     parameters.Stop();
                 } else if (e_char === 'X') {
                     parameters.Close();
+                } else if (e_char === 'C') {
+                    parameters.PlayChord();
                 }
+            } else if (e.altKey === true) {
+                
+            } else {
             }
         });
         </script>
