@@ -46,10 +46,7 @@
                 <!-- Copyright (C) 2016 by Michael Gogins -->
                 <td><b><i>Swum</i></b>, for Csound+HTML5</td>
                 <td style="text-align:right;">Michael Gogins</td>
-            <tr>
-                <td colspan="2" style="color:gold;text-align:left">Click "Play"; if you don't hear sound, adjust "Master effects" group "gk_MasterOutput_level" slider and some instrument level sliders, click "Save", click "Revert."</td>
-            </tr>
-            </tr>
+</tr>
             <tr>
                 <td>Time:</td>
                 <td id="Time_cell" style="text-align:right;color:LawnGreen;font-weight:bold;">0</td>
@@ -640,10 +637,14 @@ f 0 360
         var score_time_started = 0.;
         var score_time = 0.;
         var chord = new ChordSpace.Chord([36, 48, 55, 59, 64]);
+        chord.setDuration(-1);
+        chord.setVelocity(60);
+        chord.setChannelsToVoices();
         var modality = chord.clone();
         console.log(chord.information());
-        var do_voiceleading = false;
         var prior_chord = chord.clone();
+        var prior_score = new Silencio.Score();
+        var score = new Silencio.Score();
         function csoundMessage(text) {
             var Log_cell = document.getElementById('console');
             Log_cell.value += text;
@@ -849,6 +850,15 @@ f 0 360
           var message = {data: data};
           logMessage(message);
         }
+        var toName = function(chord) {
+            name = "";
+            let voice;
+            let voices;
+            for (voice = 0, voices = chord.size(); voice < voices; voice++) {
+                name = name + "_" + Math.round(chord.voices[voice]);
+            }
+            return name;
+        }
         $(document).on("keydown", function (e) {
             //printKey(e);
             e.preventDefault();
@@ -870,7 +880,7 @@ f 0 360
             value *= sign;
             console.log('value:' + value);
             if (e.ctrlKey === true) {
-                if        (e_char === 'V') {
+                if        (e_char === 'H') {
                     parameters.Hide();
                 } else if (e_char === 'K') {
                     chord = chord.K(modality);
@@ -881,11 +891,45 @@ f 0 360
                 } else if (e_char === 'X') {
                     parameters.Close();
                 } else if (e_char === 'C') {
-                    parameters.PlayChord();
+                    // Turn off prior chord.
+                    prior_score.clear();
+                    ChordSpace.insert(prior_score, prior_chord, 0);
+                    prior_score.turnoffInCsound(csound);
+                    // Turn on current chord with indefinite duration.
+                    score.clear();
+                    chord = chord.er(72).T(24);
+                    console.log(chord.information());
+                    ChordSpace.insert(score, chord, 0);
+                    score.sendToCsound(csound);
+                    // Save current chord as prior chord.
+                    prior_chord = chord.clone();
+                    let name = toName(chord);
+                    flame.updateName(name);
+                } else if (e_char === 'V') {
+                    // Turn off prior chord.
+                    prior_score.clear();
+                    ChordSpace.insert(prior_score, prior_chord, 0);
+                    prior_score.turnoffInCsound(csound);
+                    // Turn on current chord with indefinite duration.
+                    score.clear();
+                    chord = ChordSpace.voiceleadingSimpler(prior_chord, chord, true);
+                    console.log(chord.information());
+                    ChordSpace.insert(score, chord, 0);
+                    score.sendToCsound(csound);
+                    // Save current chord as prior chord.
+                    prior_chord = chord.clone();
+                    let name = toName(chord);
+                    flame.updateName(name);
+                } else {
+                    chord = chord.T(value);
                 }
             } else if (e.altKey === true) {
-                
+                chord = chord.Q(value, modality);
             } else {
+                let n = Math.abs(value);
+                for (let i = 0; i < n; i++) {
+                    chord = chord.v(sign);
+                }
             }
         });
         </script>

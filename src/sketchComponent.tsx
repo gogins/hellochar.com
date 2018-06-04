@@ -103,7 +103,8 @@ class SketchSuccessComponent extends React.Component<{ sketch: ISketch }, {}> {
     private updateRendererCanvasToMatchParent(renderer: THREE.WebGLRenderer) {
         const parent = renderer.domElement.parentElement;
         if (parent != null) {
-            renderer.setSize(parent.clientWidth, parent.clientHeight);
+            //renderer.setSize(parent.clientWidth, parent.clientHeight);
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
     }
 }

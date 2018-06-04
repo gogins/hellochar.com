@@ -134,10 +134,10 @@ function computeDepth() {
     // 120k = b^0 + b^1 + ... + b^d
     // only the last level really matters - the last level accounts for at least
     // half of the total sum (except for b = 1)
+    // MKG: Zhang's original was not dense enough for me.
     const depth = (globalBranches.length === 1)
         ? 1000
-        : Math.floor(Math.log(100000) / Math.log(globalBranches.length));
-        // just do depth 1k to prevent call stack
+        : Math.floor(Math.log(1000000) / Math.log(globalBranches.length));
     return depth;
 }
 
@@ -222,7 +222,7 @@ class Flame extends ISketch {
         // low density 1.5 and below are spaced out, larger fractals
         // between 1.5 and 3 is a nice variety
         // anything above 3 is really dense, hard to see
-        const density = countDensity / count;
+        const density = 200; // countDensity / count;
         const velocityFactor = Math.min(velocity, 0.3);
         const velocitySq = map(velocity * velocity, 1e-8, 0.005, -10, 10);
         const cameraLength = camera.position.length();
