@@ -10,6 +10,17 @@
         <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta http-equiv="Pragma" content="no-cache" />
         <meta http-equiv="Expires" content="0" />
+        <script>
+        var csound_message_callback = function(text) {
+            var console_ = document.getElementById('console');
+            if (console_ === null) {
+                console.log(text);
+            } else {
+                console_.value += text;
+                console_.scrollTop = console_.scrollHeight;
+            }
+        }
+        </script>
         <script src="csound_samples.js"></script>
         <script src="CsoundAudioNode.js"></script>
         <script src="csound_loader.js"></script>
@@ -55,10 +66,6 @@
                 <td>Chord: </td>
                 <td id="Chord_cell" style="color:SkyBlue;text-align:right;"></td>
             </tr>
-            <tr>
-                <td>Notes: </td>
-                <td id="Notes_cell" style="color:SkyBlue;text-align:right;"></td>
-            </tr>
             <tr id='messages'>
                 <td colspan="2"><textarea id="console" style="width:100%;color:SkyBlue;background-color:transparent;border:none;text-align:left;height:200px;overflow:auto;padding:0;margin:0;border-collapse:collapse;font-family:Courier, sans-serif;font-size:8pt;"></textarea></td>
             </tr>
@@ -74,285 +81,334 @@ All rights reserved.
 </CsOptions>
 <CsInstruments>
 sr = 48000
-ksmps = 100
+ksmps = 128
 nchnls = 2
-0dbfs = 5000000
+0dbfs = 1
 
-gkslider1 init 0
-gkslider2 init 0
-gkslider3 init 0
-gkslider4 init 0
-gkslider5 init 0
-gkbutt1 init 0
-gkbutt2 init 0
-gkbutt3 init 0
-gkbutt4 init 0
-gkbutt5 init 0
-gktrackpadx init 0
-gktrackpady init 0
-gkaccelerometerx init 0
-gkaccelerometery init 0
-gkaccelerometerz init 0
-
-connect "Bower", "outleft", "ReverbLeft", "inleft"
-connect "Bower", "outright", "ReverbRight", "inright"
-connect "Phaser", "outleft", "ReverbLeft", "inleft"
-connect "Phaser", "outright", "ReverbRight", "inright"
-connect "Droner", "outleft", "ReverbLeft", "inleft"
-connect "Droner", "outright", "ReverbRight", "inright"
-connect "Sweeper", "outleft", "ReverbLeft", "inleft"
-connect "Sweeper", "outright", "ReverbRight", "inright"
-connect "Buzzer", "outleft", "ReverbLeft", "inleft"
-connect "Buzzer", "outright", "ReverbRight", "inright"
-connect "Blower", "outleft", "ReverbLeft", "inleft"
-connect "Blower", "outright", "ReverbRight", "inright"
-connect "Shiner", "outleft", "ReverbLeft", "inleft"
-connect "Shiner", "outright", "ReverbRight", "inright"
-; connect "ReverbLeft", "outleft", "ParametricEQ", "inleft"
-; connect "ReverbRight", "outright", "ParametricEQ", "inright"
-; connect "ParametricEQ", "outleft", "MasterOutput", "inleft"
-; connect "ParametricEQ", "outright", "MasterOutput", "inright"
-connect "ReverbLeft", "outleft", "MasterOutput", "inleft"
-connect "ReverbRight", "outright", "MasterOutput", "inright"
+connect "Blower", "outleft", "ReverbSC", "inleft"
+connect "Blower", "outright", "ReverbSC", "inright"
+connect "Bower", "outleft", "ReverbSC", "inleft"
+connect "Bower", "outright", "ReverbSC", "inright"
+connect "Buzzer", "outleft", "ReverbSC", "inleft"
+connect "Buzzer", "outright", "ReverbSC", "inright"
+connect "Droner", "outleft", "ReverbSC", "inleft"
+connect "Droner", "outright", "ReverbSC", "inright"
+connect "FMDroner", "outright", "ReverbSC", "inright"
+connect "FMDroner", "outleft", "ReverbSC", "inleft"
+connect "Harpsichord", "outleft", "ReverbSC", "inleft"
+connect "Harpsichord", "outright", "ReverbSC", "inright"
+connect "Phaser", "outleft", "ReverbSC", "inleft"
+connect "Phaser", "outright", "ReverbSC", "inright"
+connect "Sweeper", "outleft", "ReverbSC", "inleft"
+connect "Sweeper", "outright", "ReverbSC", "inright"
+connect "Xing", "outleft", "MasterOutput", "inleft"
+connect "Xing", "outright", "MasterOutput", "inright"
+connect "YiString", "outleft", "ReverbSC", "inleft"
+connect "YiString", "outright", "ReverbSC", "inright"
+connect "YiString", "chorusleft", "SolinaChorus", "inleft"
+connect "YiString", "chorusright", "SolinaChorus", "inright"
+connect "SolinaChorus", "outleft", "ReverbSC", "inleft"
+connect "SolinaChorus", "outright", "ReverbSC", "inright"
+connect "ReverbSC", "outleft", "MasterOutput", "inleft"
+connect "ReverbSC", "outright", "MasterOutput", "inright"
 
 alwayson "Controls"
-alwayson "VariablesForControls"
-alwayson "ReverbLeft"
-alwayson "ReverbRight"
-alwayson "ParametricEQ"
+;alwayson "SolinaChorus"
+alwayson "ReverbSC"
 alwayson "MasterOutput"
 
-opcode ratio2midinn, i, iii
-ifundamental, inumerator, idenominator xin
-ihertz = ifundamental * inumerator / idenominator
-; print ihertz
-; m = 12*log2(fm/440 Hz) + 69
-ilog2 = log(2)
-imidinn = 12 * (log(ihertz / 440) / ilog2) + 69
-; print imidinn
-xout imidinn
-endop
+prealloc 1, 3
+prealloc 2, 3
+prealloc 3, 3
+prealloc 4, 3
+prealloc 5, 3
 
-instr 101
-iinsno = p1
-istart = p2
-iduration = p3
-ifundamental = p4
-inumerator = p5
-idenominator = p6
-ivelocity = p7
-ipan = p8
-iratio = inumerator / idenominator
-ihertz = ifundamental * iratio
-ikey ratio2midinn ifundamental, inumerator, idenominator
-event_i "i", "Droner", 0, iduration, ikey, ivelocity, 0, ipan
+gk_FMDroner_partial1 init .5
+gk_FMDroner_partial2 init .05
+gk_FMDroner_partial3 init .1
+gk_FMDroner_partial4 init .2
+gk_FMDroner_partial5 init .1
+gk_FMDroner_partial6 init 0
+gk_FMDroner_partial7 init 0
+gk_FMDroner_partial8 init 0
+gk_FMDroner_partial9 init 0
+gk_FMDroner_partial10 init 0
+gk_FMDroner_index init 3
+gk_FMDroner_carrier init 1
+gk_FMDroner_modulator init 3
+gk_FMDroner_transeg_exponent init -20
+gk_FMDroner_x init 6
+gk_FMDroner_y init 0
+gk_FMDroner_z init 0
+gk_FMDroner_level init 0
+gi_FMDroner_sine ftgen 0, 0, 65536, 10, 1, 0, .02
+instr FMDroner
+i_instrument = p1
+i_time = p2
+i_duration = p3
+i_midi_key = p4
+i_midi_velocity = p5
+k_space_front_to_back = p6
+k_space_left_to_right = p7
+k_space_bottom_to_top = p8
+i_phase = p9
+i_frequency = cpsmidinn(i_midi_key)
+; Adjust the following value until "overall amps" at the end of performance is about -6 dB.
+i_overall_amps = -20 + 98 
+i_normalization = ampdb(-i_overall_amps) / 2
+i_amplitude = ampdb(i_midi_velocity) * i_normalization
+k_gain = ampdb(gk_FMDroner_level)
+k1 = gk_FMDroner_partial1
+k2 = gk_FMDroner_partial2
+k3 = gk_FMDroner_partial3
+k4 = gk_FMDroner_partial4
+k5 = gk_FMDroner_partial5
+k6 = gk_FMDroner_partial6
+k7 = gk_FMDroner_partial7
+k8 = gk_FMDroner_partial8
+k9 = gk_FMDroner_partial9
+k10 = gk_FMDroner_partial10
+iattack = .5
+idecay = .5
+isustain = p3
+xtratim iattack + isustain + idecay
+aenvelope transeg 0.0, iattack / 2.0, 1.5, 1 / 2.0, iattack / 2.0, -1.5, 1, isustain, 0.0, 1, idecay / 2.0, 1.5, 1 / 2.0, idecay / 2.0, -1.5, 0
+ihertz = cpsmidinn(i_midi_key)
+;asignal poscil3 1, ihertz, gi_FMDroner_sine
+kndx transeg i(gk_FMDroner_index), i(p3), i(gk_FMDroner_transeg_exponent), 0
+asignal foscili .5, ihertz, gk_FMDroner_carrier, gk_FMDroner_modulator, kndx, gi_FMDroner_sine
+asignal chebyshevpoly asignal, 0, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10
+a_signal = asignal
+i_attack = .002
+i_sustain = p3
+i_release = 0.01
+xtratim i_attack + i_sustain + i_release
+a_declicking linsegr 0, i_attack, 1, i_sustain, 1, i_release, 0
+a_signal = a_signal * i_amplitude * a_declicking * k_gain
+#ifdef USE_SPATIALIZATION
+a_spatial_reverb_send init 0
+a_bsignal[] init 16
+a_bsignal, a_spatial_reverb_send Spatialize a_signal, k_space_front_to_back, k_space_left_to_right, k_space_bottom_to_top
+outletv "outbformat", a_bsignal
+outleta "out", a_spatial_reverb_send
+#else
+a_out_left, a_out_right pan2 a_signal, k_space_left_to_right
+outleta "outleft", a_out_left
+outleta "outright", a_out_right
+#endif
+prints "FMDroner       i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\n", p1, p2, p3, p4, p5, p7, active(p1)
 endin
 
-instr 102
-iinsno = p1
-istart = p2
-iduration = p3
-ifundamental = p4
-inumerator = p5
-idenominator = p6
-ivelocity = p7
-ipan = p8
-iratio = inumerator / idenominator
-ihertz = ifundamental * iratio
-ikey ratio2midinn ifundamental, inumerator, idenominator
-event_i "i", "Phaser", 0, iduration, ikey, ivelocity, 0, ipan
-endin
-
-instr 103
-iinsno = p1
-istart = p2
-iduration = p3
-ifundamental = p4
-inumerator = p5
-idenominator = p6
-ivelocity = p7
-ipan = p8
-iratio = inumerator / idenominator
-ihertz = ifundamental * iratio
-ikey ratio2midinn ifundamental, inumerator, idenominator
-event_i "i", "Droner", 0, iduration, ikey, ivelocity, 0, ipan
-endin
-
-instr 104
-iinsno = p1
-istart = p2
-iduration = p3
-ifundamental = p4
-inumerator = p5
-idenominator = p6
-ivelocity = p7
-ipan = p8
-iratio = inumerator / idenominator
-ihertz = ifundamental * iratio
-ikey ratio2midinn ifundamental, inumerator, idenominator
-event_i "i", "Blower", 0, iduration, ikey, ivelocity, 0, ipan
-endin
-
-gioverlap = 20
-
-gkDistortFactor init 0.4
-gkFirstHarmonic init 0.4
+gk_Droner_partial1 init .5
+gk_Droner_partial2 init .05
+gk_Droner_partial3 init .1
+gk_Droner_partial4 init .2
+gk_Droner_partial5 init .1
+gk_Droner_partial6 init 0
+gk_Droner_partial7 init 0
+gk_Droner_partial8 init 0
+gk_Droner_partial9 init 0
+gk_Droner_partial10 init 0
+gk_Droner_level init 0
+gi_Droner_waveform init 0
+gi_Droner_sine ftgen 0, 0, 65536, 10, 1, 0, .02
 instr Droner
-iinsno = p1
-istart = p2
-iduration = p3
-ikey = p4
-ivelocity = p5
-iphase = p6
-ipan = p7
-print iinsno, istart, iduration, ikey, ivelocity, iphase, ipan
-k1 init .5
-k2 init .05
-k3 init .1
-k4 init .2
-k5 init .1
-k6 init .05
-k7 init .1
-k8 init 0
-k9 init 0
-k10 init 0
-k3 = gkslider1
-k4 = gkslider2
-k5 = gkslider3
-k6 = gkslider4
-k7 = gkslider5
-kwaveform init 0
-iamp = ampdb(ivelocity)
-iattack = gioverlap
-idecay = gioverlap
-isustain = p3 - gioverlap
-p3 = iattack + isustain + idecay
-kenvelope transeg 0.0, iattack / 2.0, 1.5, iamp / 2.0, iattack / 2.0, -1.5, iamp, isustain, 0.0, iamp, idecay / 2.0, 1.5, iamp / 2.0, idecay / 2.0, -1.5, 0
-ihertz = cpsmidinn(ikey)
-print ihertz
-isine ftgenonce 0, 0, 65536, 10, 1, 0, .02
-if kwaveform == 0 then
-asignal poscil3 1, ihertz, isine
+i_instrument = p1
+i_time = p2
+i_duration = p3
+i_midi_key = p4
+i_midi_velocity = p5
+k_space_front_to_back = p6
+k_space_left_to_right = p7
+k_space_bottom_to_top = p8
+i_phase = p9
+i_frequency = cpsmidinn(i_midi_key)
+; Adjust the following value until "overall amps" at the end of performance is about -6 dB.
+i_overall_amps = -20 + 98 + 4
+i_normalization = ampdb(-i_overall_amps) / 2
+i_amplitude = ampdb(i_midi_velocity) * i_normalization
+k_gain = ampdb(gk_Droner_level)
+k1 = gk_Droner_partial1
+k2 = gk_Droner_partial2
+k3 = gk_Droner_partial3
+k4 = gk_Droner_partial4
+k5 = gk_Droner_partial5
+k6 = gk_Droner_partial6
+k7 = gk_Droner_partial7
+k8 = gk_Droner_partial8
+k9 = gk_Droner_partial9
+k10 = gk_Droner_partial10
+iwaveform = gi_Droner_waveform
+iattack = .5
+idecay = .5
+isustain = p3
+xtratim iattack + isustain + idecay
+aenvelope transeg 0.0, iattack / 2.0, 1.5, 1 / 2.0, iattack / 2.0, -1.5, 1, isustain, 0.0, 1, idecay / 2.0, 1.5, 1 / 2.0, idecay / 2.0, -1.5, 0
+ihertz = cpsmidinn(i_midi_key)
+if iwaveform == 0 then
+asignal poscil3 1, ihertz, gi_Droner_sine
 endif
-if kwaveform == 1 then
+if iwaveform == 1 then
 asignal vco2 1, ihertz, 8 ; integrated saw
 endif
-if kwaveform == 2 then
+if iwaveform == 2 then
 asignal vco2 1, ihertz, 12 ; triangle
 endif
 asignal chebyshevpoly asignal, 0, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10
-asignal = asignal * kenvelope * 10
-aleft, aright pan2 asignal, ipan
-adamping linseg 0, 0.03, 1, p3 - 0.1, 1, 0.07, 0
-aleft = adamping * aleft
-aright = adamping * aright
-outleta "outleft", aleft
-outleta "outright", aright
+a_signal = asignal
+i_attack = .002
+i_sustain = p3
+i_release = 0.01
+xtratim i_attack + i_sustain + i_release
+a_declicking linsegr 0, i_attack, 1, i_sustain, 1, i_release, 0
+a_signal = a_signal * i_amplitude * a_declicking * k_gain
+#ifdef USE_SPATIALIZATION
+a_spatial_reverb_send init 0
+a_bsignal[] init 16
+a_bsignal, a_spatial_reverb_send Spatialize a_signal, k_space_front_to_back, k_space_left_to_right, k_space_bottom_to_top
+outletv "outbformat", a_bsignal
+outleta "out", a_spatial_reverb_send
+#else
+a_out_left, a_out_right pan2 a_signal, k_space_left_to_right
+outleta "outleft", a_out_left
+outleta "outright", a_out_right
+#endif
+prints "Droner         i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\n", p1, p2, p3, p4, p5, p7, active(p1)
 endin
 
+gk_Bower_midi_dynamic_range init 127
+gk_Bower_attack init .0125
+gk_Bower_release init .0125
+gk_Bower_level init 0.5
+gk_Bower_pressure init 0.25
+gi_Bower_sine ftgen 0,0,65536,10,1
 instr Bower
-iinsno = p1
-istart = p2
-iduration = p3
-ikey = p4
-ivelocity = p5
-iphase = p6
-ipan = p7
-print iinsno, istart, iduration, ikey, ivelocity, iphase, ipan
-iamp = ampdb(ivelocity) * 200
-iattack = gioverlap
-idecay = gioverlap
-isustain = p3 - gioverlap
-p3 = iattack + isustain + idecay
+i_instrument = p1
+i_time = p2
+i_duration = p3
+i_midi_key = p4
+i_midi_dynamic_range = i(gk_Bower_midi_dynamic_range)
+i_midi_velocity = p5 * i_midi_dynamic_range / 127 + (63.5 - i_midi_dynamic_range / 2)
+k_space_front_to_back = p6
+k_space_left_to_right = p7
+k_space_bottom_to_top = p8
+i_phase = p9
+i_frequency = cpsmidinn(i_midi_key)
+; Adjust the following value until "overall amps" at the end of performance is about -6 dB.
+i_level_correction = 74.6
+i_normalization = ampdb(-i_level_correction) / 2
+i_amplitude = ampdb(i_midi_velocity) * i_normalization
+k_gain = ampdb(gk_Bower_level)
+iattack = i(gk_Bower_attack)
+idecay = i(gk_Bower_release)
+isustain = p3 - i(gk_Bower_release)
+xtratim iattack + isustain + idecay
+iamp = i_amplitude
 kenvelope transeg 0.0, iattack / 2.0, 1.5, iamp / 2.0, iattack / 2.0, -1.5, iamp, isustain, 0.0, iamp, idecay / 2.0, 1.5, iamp / 2.0, idecay / 2.0, -1.5, 0
-ihertz = cpsmidinn(ikey)
+ihertz = cpsmidinn(i_midi_key)
 kamp = kenvelope
 kfreq = ihertz
 kpres = 0.25
-; krat rspline 0.006,0.988,0.1,0.4
 krat rspline 0.006,0.988,1,4
 kvibf = 4.5
 kvibamp = 0
-iminfreq = 20
-isine ftgenonce 0,0,65536,10,1
-aSig wgbow kamp,kfreq,kpres,krat,kvibf,kvibamp,isine,iminfreq
-;aSig butlp aSig,2000
-;aSig pareq aSig,80,6,0.707
-aleft, aright pan2 aSig / 7, ipan
+iminfreq = 30
+aSig wgbow kamp,kfreq,gk_Bower_pressure,krat,kvibf,kvibamp,gi_Bower_sine,iminfreq
+aleft, aright pan2 aSig / 7, k_space_left_to_right
 adamping linseg 0, 0.03, 1, p3 - 0.1, 1, 0.07, 0
 aleft = adamping * aleft
 aright = adamping * aright
-outleta "outleft", aleft
-outleta "outright", aright
+outleta "outleft", aleft * k_gain
+outleta "outright", aright * k_gain
+prints "Bower          i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\n", p1, p2, p3, p4, p5, p7, active(p1)
 endin
 
-gkratio1 = 1
-gkratio2 = 1/3
-gkindex1 = 1
-gkindex2 = 0.0125
+gk_Phaser_attack init .0125
+gk_Phaser_release init .0125
+gk_Phaser_ratio1 init 1
+gk_Phaser_ratio2 init 1/3
+gk_Phaser_index1 init 1
+gk_Phaser_index2 init 0.0125
+gk_Phaser_level init 0.5
+gi_Phaser_sine ftgen 0,0,65536,10,1
 instr Phaser
-iinsno = p1
+insno = p1
 istart = p2
 iduration = p3
 ikey = p4
 ivelocity = p5
 iphase = p6
 ipan = p7
-print iinsno, istart, iduration, ikey, ivelocity, iphase, ipan
-iamp = ampdb(ivelocity) * 12
-iattack = gioverlap
-idecay = gioverlap
-isustain = p3 - gioverlap
-p3 = iattack + isustain + idecay
+iamp = ampdb(ivelocity) * 8
+iattack = i(gk_Phaser_attack)
+idecay = i(gk_Phaser_release)
+isustain = p3 - i(gk_Phaser_attack)
+xtratim iattack + isustain + idecay
 kenvelope transeg 0.0, iattack / 2.0, 1.5, iamp / 2.0, iattack / 2.0, -1.5, iamp, isustain, 0.0, iamp, idecay / 2.0, 1.5, iamp / 2.0, idecay / 2.0, -1.5, 0
 ihertz = cpsmidinn(ikey)
-isine ftgenonce 0,0,65536,10,1
 khertz = ihertz
-ifunction1 = isine
-ifunction2 = isine
-a1,a2 crosspm gkratio1, gkratio2, gkindex1, gkindex2, khertz, ifunction1, ifunction2
+ifunction1 = gi_Phaser_sine
+ifunction2 = gi_Phaser_sine
+a1,a2 crosspm gk_Phaser_ratio1, gk_Phaser_ratio2, gk_Phaser_index1, gk_Phaser_index2, khertz, ifunction1, ifunction2
 aleft, aright pan2 a1+a2, ipan
 adamping linseg 0, 0.03, 1, p3 - 0.1, 1, 0.07, 0
 aleft = adamping * aleft * kenvelope
 aright = adamping * aright * kenvelope
-outleta "outleft", aleft
-outleta "outright", aright
+kgain = ampdb(gk_Phaser_level)
+outleta "outleft", aleft * kgain
+outleta "outright", aright * kgain
+prints "Phaser         i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\\n", p1, p2, p3, p4, p5, p7, active(p1)
 endin
 
-gkbritel init 0
-gkbriteh init 2.9
-gkbritels init .2 / 3
-gkbritehs init 2.5 / 2
+gk_Sweeper_midi_dynamic_range init 127
+gk_Sweeper_attack init .0125
+gk_Sweeper_release init .0125
+gk_Sweeper_britel init 0
+gk_Sweeper_briteh init 2.9
+gk_Sweeper_britels init .2 / 3
+gk_Sweeper_britehs init 2.5 / 2
+gk_Sweeper_level init 0
+gi_Sweeper_sine ftgen 0, 0, 65536, 10, 1
+gi_Sweeper_octfn ftgen 0, 0, 65536, -19, 1, 0.5, 270, 0.5
 instr Sweeper
-iinsno = p1
-istart = p2
-iduration = p3
-ikey = p4
-ivelocity = p5
-iphase = p6
-ipan = p7
-print iinsno, istart, iduration, ikey, ivelocity, iphase, ipan
-iamp = ampdb(ivelocity)
-gisine ftgenonce 0, 0, 65536, 10, 1
-gioctfn ftgenonce 0, 0, 65536, -19, 1, 0.5, 270, 0.5
-iattack = gioverlap
-idecay = gioverlap
-isustain = p3 - gioverlap
-p3 = iattack + isustain + idecay
-kenvelope transeg 0.0, iattack / 2.0, 1.5, iamp / 2.0, iattack / 2.0, -1.5, iamp, isustain, 0.0, iamp, idecay / 2.0, 1.5, iamp / 2.0, idecay / 2.0, -1.5, 0
-ihertz = cpsmidinn(ikey)
+//////////////////////////////////////////////
+// Original by Iain McCurdy.
+// Adapted by Michael Gogins.
+//////////////////////////////////////////////
+i_instrument = p1
+i_time = p2
+i_duration = p3
+i_midi_key = p4
+i_midi_dynamic_range = i(gk_Sweeper_midi_dynamic_range)
+i_midi_velocity = p5 * i_midi_dynamic_range / 127 + (63.5 - i_midi_dynamic_range / 2)
+k_space_front_to_back = p6
+k_space_left_to_right = p7
+k_space_bottom_to_top = p8
+i_phase = p9
+i_frequency = cpsmidinn(i_midi_key)
+; Adjust the following value until "overall amps" at the end of performance is about -6 dB.
+i_level_correction = 58
+i_normalization = ampdb(-i_level_correction) / 2
+i_amplitude = ampdb(i_midi_velocity) * i_normalization
+k_gain = ampdb(gk_Sweeper_level)
+
+iattack = i(gk_Sweeper_attack)
+idecay = i(gk_Sweeper_release)
+isustain = p3 - i(gk_Sweeper_attack)
+xtratim iattack + isustain + idecay
+kenvelope transeg 0.0, iattack / 2.0, 1.5, i_amplitude / 2.0, iattack / 2.0, -1.5, i_amplitude, isustain, 0.0, i_amplitude, idecay / 2.0, 1.5, i_amplitude / 2.0, idecay / 2.0, -1.5, 0
+ihertz = i_frequency
 icps = ihertz
 kamp expseg 0.001,0.02,0.2,p3-0.01,0.001
 ktonemoddep jspline 0.01,0.05,0.2
 ktonemodrte jspline 6,0.1,0.2
-ktone poscil3 ktonemoddep, ktonemodrte, gisine
-kbrite rspline gkbritel, gkbriteh, gkbritels, gkbritehs
+ktone poscil3 ktonemoddep, ktonemodrte, gi_Sweeper_sine
+kbrite rspline gk_Sweeper_britel, gk_Sweeper_briteh, gk_Sweeper_britels, gk_Sweeper_britehs
 ibasfreq init icps
 ioctcnt init 3
 iphs init 0
-;a1 hsboscil kamp, ktone, kbrite, ibasfreq, gisine, gioctfn, ioctcnt, iphs
-a1 hsboscil kenvelope, ktone, kbrite, ibasfreq, gisine, gioctfn, ioctcnt, iphs
-amod poscil3 0.25, ibasfreq*(1/3), gisine
+a1 hsboscil kenvelope, ktone, kbrite, ibasfreq, gi_Sweeper_sine, gi_Sweeper_octfn, ioctcnt, iphs
+amod poscil3 0.25, ibasfreq*(1/3), gi_Sweeper_sine
 arm = a1*amod
 kmix expseg 0.001, 0.01, rnd(1), rnd(3)+0.3, 0.001
 kmix=.25
@@ -361,8 +417,9 @@ a1 ntrpol a1, arm, kmix
 ;a1 tone a1, 500
 kpanrte jspline 5, 0.05, 0.1
 kpandep jspline 0.9, 0.2, 0.4
-kpan poscil3 kpandep, kpanrte, gisine
-a1,a2 pan2 a1, kpan
+kpan poscil3 kpandep, kpanrte, gi_Sweeper_sine
+;a1,a2 pan2 a1, kpan
+a1,a2 pan2 a1, k_space_left_to_right
 a1 delay a1, rnd(0.1)
 a2 delay a2, rnd(0.11)
 kenv linsegr 1, 1, 0
@@ -372,121 +429,101 @@ aright = a2*kenv*.02
 adamping linseg 0, 0.03, 1, p3 - 0.1, 1, 0.07, 0
 aleft = adamping * aleft
 aright = adamping * aright
-outleta "outleft", aleft
-outleta "outright", aright
+kgain = ampdb(gk_Sweeper_level)
+outleta "outleft", aleft * kgain
+outleta "outright", aright * kgain
+prints "Sweeper        i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\n", p1, p2, p3, p4, p5, p7, active(p1)
 endin
 
+gk_Buzzer_attack init .0125
+gk_Buzzer_release init .0125
+gk_Buzzer_Harmonics init 15
+gk_Buzzer_level init .5
+gi_Buzzer_sine ftgen 0, 0, 65536, 10, 1
 instr Buzzer
-iinsno = p1
+insno = p1
 istart = p2
 iduration = p3
 ikey = p4
 ivelocity = p5
 iphase = p6
 ipan = p7
-print iinsno, istart, iduration, ikey, ivelocity, iphase, ipan
 iamp = ampdb(ivelocity) * 4
-iattack = gioverlap
-idecay = gioverlap
-isustain = p3 - gioverlap
-p3 = iattack + isustain + idecay
+iattack = i(gk_Buzzer_attack)
+idecay = i(gk_Buzzer_release)
+isustain = p3 - i(gk_Buzzer_attack)
+xtratim iattack + isustain + idecay
 kenvelope transeg 0.0, iattack / 2.0, 1.5, iamp / 2.0, iattack / 2.0, -1.5, iamp, isustain, 0.0, iamp, idecay / 2.0, 1.5, iamp / 2.0, idecay / 2.0, -1.5, 0
 ihertz = cpsmidinn(ikey)
-;asignal gbuzz kenvelope, ihertz, 3, gkFirstHarmonic, gkDistortFactor, gisine
-isine ftgenonce 0, 0, 65536, 10, 1
-gkHarmonics = gkslider1 * 20
-asignal buzz kenvelope, ihertz, gkHarmonics, isine
+;asignal gbuzz kenvelope, ihertz, 3, gk_FirstHarmonic, gk_DistortFactor, gisine
+gk_Harmonics = gk_Buzzer_Harmonics
+asignal buzz kenvelope, ihertz, gk_Harmonics, gi_Buzzer_sine
 asignal = asignal * 3
 ;asignal vco2 kenvelope, ihertz, 12
 ;asignal poscil3 kenvelope, ihertz, giharmonics
-;asignal distort asignal, gkDistortFactor * .4, giwaveshaping
+;asignal distort asignal, gk_DistortFactor * .4, giwaveshaping
 aleft, aright pan2 asignal, ipan
 adamping linseg 0, 0.03, 1, p3 - 0.1, 1, 0.07, 0
 aleft = adamping * aleft
 aright = adamping * aright
-outleta "outleft", aleft
-outleta "outright", aright
+kgain = ampdb(gk_Buzzer_level)
+outleta "outleft", aleft * kgain
+outleta "outright", aright * kgain
+prints "Buzzer         i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\n", p1, p2, p3, p4, p5, p7, active(p1)
 endin
 
-instr Shiner
-iinsno = p1
-istart = p2
-iduration = p3
-ikey = p4
-ivelocity = p5
-iphase = p6
-ipan = p7
-print iinsno, istart, iduration, ikey, ivelocity, iphase, ipan
-iamp = ampdb(ivelocity) * 4
-iattack = gioverlap
-idecay = gioverlap
-isustain = p3 - gioverlap
-p3 = iattack + isustain + idecay
-kenvelope transeg 0.0, iattack / 2.0, 1.5, iamp / 2.0, iattack / 2.0, -1.5, iamp, isustain, 0.0, iamp, idecay / 2.0, 1.5, iamp / 2.0, idecay / 2.0, -1.5, 0
-ihertz = cpsmidinn(ikey)
-;asignal gbuzz kenvelope, ihertz, 3, gkFirstHarmonic, gkDistortFactor, gisine
-gkHarmonics = gkslider1 * 20
-;asignal buzz kenvelope, ihertz, gkHarmonics, gisine
-;asignal = asignal
-asignal vco2 kenvelope * 4, ihertz, 12
-;asignal poscil3 kenvelope, ihertz, giharmonics
-;asignal distort asignal, gkDistortFactor * .4, giwaveshaping
-aleft, aright pan2 asignal, ipan
-adamping linseg 0, 0.03, 1, p3 - 0.1, 1, 0.07, 0
-aleft = adamping * aleft
-aright = adamping * aright
-outleta "outleft", aleft
-outleta "outright", aright
-endin
-
-gkgrainDensity init 150
-gkgrainDuration init 0.2
-gkgrainAmplitudeRange init 100
-gkgrainFrequencyRange init .033
+gk_Blower_midi_dynamic_range init 127
+gk_Blower_grainDensity init 120
+gk_Blower_grainDuration init 0.2
+gk_Blower_grainAmplitudeRange init 100
+gk_Blower_grainFrequencyRange init .033
+gk_Blower_level init 0
+gi_Blower_grtab ftgen 0, 0, 65536, 10, 1, .3, .1, 0, .2, .02, 0, .1, .04
+gi_Blower_wintab ftgen 0, 0, 65536, 10, 1, 0, .5, 0, .33, 0, .25, 0, .2, 0, .167
 instr Blower
  //////////////////////////////////////////////
  // Original by Hans Mikelson.
  // Adapted by Michael Gogins.
  //////////////////////////////////////////////
- pset 0, 0, 3600
 i_instrument = p1
 i_time = p2
 i_duration = p3
-i_midikey = p4
-i_midivelocity = p5
-i_phase = p6
-i_pan = p6
-i_depth = p8
-i_height = p9
-i_pitchclassset = p10
-i_homogeneity = p11
-ifrequency = cpsmidinn(i_midikey)
-iamplitude = ampdb(i_midivelocity) / 200
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- ; f1 0 65536 1 "hahaha.aif" 0 4 0
- ; f2 0 1024 7 0 224 1 800 0
- ; f3 0 8192 7 1 8192 -1
- ; f4 0 1024 7 0 512 1 512 0
- ; f5 0 1024 10 1 .3 .1 0 .2 .02 0 .1 .04
- ; f6 0 1024 10 1 0 .5 0 .33 0 .25 0 .2 0 .167
- ; a0 14 50
- ; p1 p2 p3 p4 p5 p6 p7 p8 p9 p10
- ; Start Dur Amp Freq GrTab WinTab FqcRng Dens Fade
- ; i1 0.0 6.5 700 9.00 5 4 .210 200 1.8
- ; i1 3.2 3.5 800 7.08 . 4 .042 100 0.8
- ; i1 5.1 5.2 600 7.10 . 4 .0320 100 0.9
- ; i1 7.2 6.6 900 8.03 . 4 .021 150 1.6
- ; i1 21.3 4.5 1000 9.00 . 4 .031 150 1.2
- ; i1 26.5 13.5 1100 6.09 . 4 .121 150 1.5
- ; i1 30.7 9.3 900 8.05 . 4 .014 150 2.5
- ; i1 34.2 8.8 700 10.02 . 4 .14 150 1.6
-igrtab ftgenonce 0, 0, 65536, 10, 1, .3, .1, 0, .2, .02, 0, .1, .04
-iwintab ftgenonce 0, 0, 65536, 10, 1, 0, .5, 0, .33, 0, .25, 0, .2, 0, .167
-iHz = ifrequency
-ip4 = iamplitude
+i_midi_key = p4
+i_midi_dynamic_range = i(gk_Blower_midi_dynamic_range)
+i_midi_velocity = p5 * i_midi_dynamic_range / 127 + (63.5 - i_midi_dynamic_range / 2)
+k_space_front_to_back = p6
+k_space_left_to_right = p7
+k_space_bottom_to_top = p8
+i_phase = p9
+i_frequency = cpsmidinn(i_midi_key)
+; Adjust the following value until "overall amps" at the end of performance is about -6 dB.
+i_level_correction = 132
+i_normalization = ampdb(-i_level_correction) / 2
+i_amplitude = ampdb(i_midi_velocity) * i_normalization
+k_gain = ampdb(gk_Blower_level)
+; f1 0 65536 1 "hahaha.aif" 0 4 0
+; f2 0 1024 7 0 224 1 800 0
+; f3 0 8192 7 1 8192 -1
+; f4 0 1024 7 0 512 1 512 0
+; f5 0 65536 10 1 .3 .1 0 .2 .02 0 .1 .04
+; f6 0 65536 10 1 0 .5 0 .33 0 .25 0 .2 0 .167
+; a0 14 50
+; p1 p2 p3 p4 p5 p6 p7 p8 p9 p10
+; Start Dur Amp Freq GrTab WinTab FqcRng Dens Fade
+; i1 0.0 6.5 700 9.00 5 4 .210 200 1.8
+; i1 3.2 3.5 800 7.08 . 4 .042 100 0.8
+; i1 5.1 5.2 600 7.10 . 4 .0320 100 0.9
+; i1 7.2 6.6 900 8.03 . 4 .021 150 1.6
+; i1 21.3 4.5 1000 9.00 . 4 .031 150 1.2
+; i1 26.5 13.5 1100 6.09 . 4 .121 150 1.5
+; i1 30.7 9.3 900 8.05 . 4 .014 150 2.5
+; i1 34.2 8.8 700 10.02 . 4 .14 150 1.6
+iHz = i_frequency
+ihertz = iHz
+ip4 = i_amplitude
 ip5 = iHz
-ip6 = igrtab
-ip7 = iwintab
+ip6 = gi_Blower_grtab
+ip7 = gi_Blower_wintab
 ip8 = 0.033
 ip8 = .002
 ip9 = 150
@@ -494,7 +531,7 @@ ip9 = 100
 ip10 = 1.6
 ip10 = 3
 idur = p3
-iamp = iamplitude ; p4
+iamp = i_amplitude ; p4
 ifqc = iHz ; cpspch(p5)
 igrtab = ip6
 iwintab = ip7
@@ -502,126 +539,176 @@ ifrng = ip8
 idens = ip9
 ifade = ip10
 igdur = 0.2
-iattack = gioverlap
-idecay = gioverlap
-isustain = p3 - gioverlap
-p3 = iattack + isustain + idecay
-kenvelope transeg 0.0, iattack / 2.0, 1.5, iamp / 2.0, iattack / 2.0, -1.5, iamp, isustain, 0.0, iamp, idecay / 2.0, 1.5, iamp / 2.0, idecay / 2.0, -1.5, 0
+iattack = 0.5
+idecay = 0.5
+isustain = p3 + iattack + idecay
+kenvelope transeg 0.0, iattack / 2.0, 1.5, .5, iattack / 2.0, -1.5, 1, isustain, 0.0, 1, idecay / 2.0, 1.5, .5, idecay / 2.0, -1.5, 0
 ; kamp linseg 0, ifade, 1, idur - 2 * ifade, 1, ifade, 0
 kamp = kenvelope
 ; Amp Fqc Dense AmpOff PitchOff GrDur GrTable WinTable MaxGrDur
-aoutl grain ip4, ifqc, gkgrainDensity, gkgrainAmplitudeRange, ifqc * gkgrainFrequencyRange, gkgrainDuration, igrtab, iwintab, 5
-aoutr grain ip4, ifqc, gkgrainDensity, gkgrainAmplitudeRange, ifqc * gkgrainFrequencyRange, gkgrainDuration, igrtab, iwintab, 5
-aleft = aoutl * kamp * iamplitude
-aright = aoutr * kamp * iamplitude
-adamping linseg 0, 0.03, 1, p3 - 0.1, 1, 0.07, 0
-aleft = adamping * aleft
-aright = adamping * aright
-outleta "outleft", aleft
-outleta "outright", aright
-prints "instr %4d t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f\n", p1, p2, p3, p4, p5, p7
-endin
-
-gkReverbFeedback init 0.975
-gkDelayModulation init 0.875
-
-
-instr ReverbLeft
-aleft init 0
-azero init 0
-aleft inleta "inleft"
-aleft, aright reverbsc aleft, azero, gkReverbFeedback, 15000.
-outleta "outleft", aleft
-endin
-
-instr ReverbRight
-aleft init 0
-azero init 0
-aright inleta "inright"
-aleft, aright reverbsc azero, aright, gkReverbFeedback, 15000.0
-outleta "outright", aright
-endin
-
-gkCenterHz init 200
-gkGain init 1
-gkQ init 0.7071067 ; sqrt(.5)
-instr ParametricEQ
-aleft inleta "inleft"
-aright inleta "inright"
-aleft pareq aleft, gkCenterHz, ampdb(gkGain), gkQ, 0
-aright pareq aright, gkCenterHz, ampdb(gkGain), gkQ, 0
-outleta "outleft", aleft
-outleta "outright", aright
-endin
-
-gkMasterLevel init 4
-instr MasterOutput
-aleft inleta "inleft"
-aright inleta "inright"
-aleft *= gkMasterLevel
-aright *= gkMasterLevel
-outs aleft, aright
-;fout "Drone-IV-performance.wav", 16, aleft, aright
+aoutl grain ip4, ifqc, gk_Blower_grainDensity, gk_Blower_grainAmplitudeRange, gk_Blower_grainFrequencyRange, gk_Blower_grainDuration, igrtab, iwintab, 5
+aoutr grain ip4, ifqc, gk_Blower_grainDensity, gk_Blower_grainAmplitudeRange, gk_Blower_grainFrequencyRange, gk_Blower_grainDuration, igrtab, iwintab, 5
+a_signal = aoutl + aoutr
+i_attack = .002
+i_sustain = p3
+i_release = 0.01
+xtratim i_attack + i_sustain + i_release
+a_declicking linsegr 0, i_attack, 1, i_sustain, 1, i_release, 0
+a_signal = a_signal * i_amplitude * a_declicking * k_gain
+printks "Blower         i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\n", 1, p1, p2, p3, p4, p5, p7, active(p1)
+#ifdef USE_SPATIALIZATION
+a_spatial_reverb_send init 0
+a_bsignal[] init 16
+a_bsignal, a_spatial_reverb_send Spatialize a_signal, k_space_front_to_back, k_space_left_to_right, k_space_bottom_to_top
+outletv "outbformat", a_bsignal
+outleta "out", a_spatial_reverb_send
+#else
+a_out_left, a_out_right pan2 a_signal, k_space_left_to_right
+outleta "outleft", a_out_left
+outleta "outright", a_out_right
+#endif
 endin
 
 instr Controls
-gkslider1 chnget "slider1"
-gkslider2 chnget "slider2"
-gkslider3 chnget "slider3"
-gkslider4 chnget "slider4"
-gkslider5 chnget "slider5"
-gkbutt1 chnget "butt1"
-gkbutt2 chnget "butt2"
-gkbutt3 chnget "butt3"
-gkbutt4 chnget "butt4"
-gkbutt5 chnget "butt5"
-gktrackpadx chnget "trackpad.x"
-gktrackpady chnget "trackpad.y"
-gkaccelerometerx chnget "accelerometerX"
-gkaccelerometery chnget "accelerometerY"
-gkaccelerometerz chnget "accelerometerZ"
+    gk_Bower_level chnget "gk_Bower_level"
+    gk_Bower_pressure chnget "gk_Bower_pressure"
+    gk_Blower_grainDensity chnget "gk_Blower_grainDensity"
+    gk_Blower_grainDuration chnget "gk_Blower_grainDuration"
+    gk_Blower_grainAmplitudeRange chnget "gk_Blower_grainAmplitudeRange"
+    gk_Blower_grainFrequencyRange chnget "gk_Blower_grainFrequencyRange"
+    gk_Blower_level chnget "gk_Blower_level"
+    gk_Buzzer_harmonics chnget "gk_Buzzer_harmonics"
+    gk_Buzzer_level chnget "gk_Buzzer_level"
+    gk_Droner_partial1 chnget "gk_Droner_partial1"
+    gk_Droner_partial2 chnget "gk_Droner_partial2"
+    gk_Droner_partial3 chnget "gk_Droner_partial3"
+    gk_Droner_partial4 chnget "gk_Droner_partial4"
+    gk_Droner_partial5 chnget "gk_Droner_partial5"
+    gk_Droner_level chnget "gk_Droner_level"
+    gk_Harpsichord_level chnget "gk_Harpsichord_level"
+    gk_Harpsichord_pick chnget "gk_Harpsichord_pick"
+    gk_Harpsichord_reflection chnget "gk_Harpsichord_reflection"
+    gk_Harpsichord_pluck chnget "gk_Harpsichord_pluck"
+    gk_MasterOutput_level chnget "gk_MasterOutput_level"
+    gk_Phaser_ratio1 chnget "gk_Phaser_ratio1"
+    gk_Phaser_ratio2 chnget "gk_Phaser_ratio2"
+    gk_Phaser_index1 chnget "gk_Phaser_index1"
+    gk_Phaser_index2 chnget "gk_Phaser_index2"
+    gk_Phaser_level chnget "gk_Phaser_level"
+    gk_Sweeper_britel chnget "gk_Sweeper_britel"
+    gk_Sweeper_briteh chnget "gk_Sweeper_briteh"
+    gk_Sweeper_britels chnget "gk_Sweeper_britels"
+    gk_Sweeper_britehs chnget "gk_Sweeper_britehs"
+    gk_Sweeper_level chnget "gk_Sweeper_level"
+    gk_YiString_reverb_send chnget "gk_YiString_reverb_send"
+    gk_YiString_cbhorus_send chnget "gk_YiString_cbhorus_send"
+    gk_YiString_level chnget "gk_YiString_level"
+    gk_SolinaChorus_chorus_lfo1_hz init .18
+    gk_SolinaChorus_chorus_lfo1_amp init .6
+    gk_SolinaChorus_chorus_lfo2_hz init 6
+    gk_SolinaChorus_chorus_lfo2_amp init .2
+    gk_Reverb_feedback chnget "gk_Reverb_feedback"
+
+prints "Controls       i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f\\n", p1, p2, p3, p4, p5, p7
 endin
 
-instr VariablesForControls
-if gkslider1 > 0 then
- 	gkFirstHarmonic = gkslider1 * 2
-	gkgrainDensity = gkslider1 * 400
-	gkratio2 = gkslider1 ;1/3
-endif
-if gkslider2 > 0 then
- 	gkDistortFactor = gkslider2 * 2
-	gkgrainDuration = 0.005 + gkslider2 / 2
-	gkindex1 = gkslider2 * 3;1
-endif
-if gkslider3 > 0 then
- 	gkVolume = gkslider3 * 5
-	gkgrainAmplitudeRange = gkslider3 * 300
-	gkindex2 = gkslider3 ;0.0125
-endif
-if gkslider4 > 0 then
-	gkgrainFrequencyRange = gkslider4 / 10
-endif
-if gktrackpady > 0 then
- 	gkDelayModulation = gktrackpady * 2
- 	; gkGain = gktrackpady * 2 - 1
-endif
-if gktrackpadx > 0 then
- 	gkReverbFeedback = (2/3) + (gktrackpadx / 3)
- 	; gkCenterHz = 100 + gktrackpadx * 3000
-endif
-kbutt1 trigger gkbutt1, .5, 0
-if kbutt1 > 0 then
- 	gkbritels = gkbritels / 1.5
- 	gkbritehs = gkbritehs / 1.5
- 	; gkQ = gkQ / 2
-endif
-kbutt2 trigger gkbutt2, .5, 0
-if kbutt2 > 0 then
- 	gkbritels = gkbritels * 1.5
- 	gkbritehs = gkbritehs * 1.5
- 	; gkQ = gkQ * 2
-endif
 
+/**
+ * Solina Chorus, based on Solina String Ensemble Chorus Module
+
+   J. Haible: Triple Chorus
+   http://jhaible.com/legacy/triple_chorus/triple_chorus.html
+
+   Hugo Portillo: Solina-V String Ensemble
+   http://www.native-instruments.com/en/reaktor-community/reaktor-user-library/entry/show/4525/
+
+   Parabola tabled shape borrowed from Iain McCurdy delayStereoChorus.csd:
+   http://iainmccurdy.org/CsoundRealtimeExamples/Delays/delayStereoChorus.csd
+
+   Author: Steven Yi
+   Date: 2016.05.22
+   Adapted by Michael Gogins
+*/
+gi_solina_parabola ftgen 0, 0, 65537, 19, 0.5, 1, 180, 1
+; 3 sine wave LFOs, 120 degrees out of phase
+opcode sol_lfo_3, aaa, kk
+kfreq, kamp xin
+aphs phasor kfreq
+; Funny: Function syntax does not work in this context.
+a0   tablei aphs, gi_solina_parabola, 1, 0, 1
+a120 tablei aphs, gi_solina_parabola, 1, 0.333, 1
+a240 tablei aphs, gi_solina_parabola, 1, -0.333, 1
+xout (a0 * kamp), (a120 * kamp), (a240 * kamp)
+endop
+
+opcode solina_chorus, a, akkkk
+aLeft, klfo_freq1, klfo_amp1, klfo_freq2, klfo_amp2 xin
+imax = 100
+;; slow lfo
+as1, as2, as3 sol_lfo_3 klfo_freq1, klfo_amp1
+;; fast lfo
+af1, af2, af3  sol_lfo_3 klfo_freq2, klfo_amp2
+at1 = limit(as1 + af1 + 5, 0.0, imax)
+at2 = limit(as2 + af2 + 5, 0.0, imax)
+at3 = limit(as3 + af3 + 5, 0.0, imax)
+a1 vdelay3 aLeft, at1, imax
+a2 vdelay3 aLeft, at2, imax
+a3 vdelay3 aLeft, at2, imax
+xout (a1 + a2 + a3) / 3
+endop
+
+gk_SolinaChorus_chorus_lfo1_hz init .18
+gk_SolinaChorus_chorus_lfo1_amp init .6
+gk_SolinaChorus_chorus_lfo2_hz init 6
+gk_SolinaChorus_chorus_lfo2_amp init .2
+instr SolinaChorus
+aleft inleta "inleft"
+aright inleta "inright"
+aleft solina_chorus aleft, gk_SolinaChorus_chorus_lfo1_hz, gk_SolinaChorus_chorus_lfo1_amp, gk_SolinaChorus_chorus_lfo2_hz, gk_SolinaChorus_chorus_lfo2_amp
+aright solina_chorus aright, gk_SolinaChorus_chorus_lfo1_hz, gk_SolinaChorus_chorus_lfo1_amp, gk_SolinaChorus_chorus_lfo2_hz, gk_SolinaChorus_chorus_lfo2_amp
+outleta "outleft", aleft
+outleta "outright", aright
+prints "SolinaChorus   i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\n", p1, p2, p3, p4, p5, p7, active(p1)
+endin
+
+gk_Reverb_feedback init 0.975
+gi_Reverb_delay_modulation init 0.875
+gk_Reverb_frequency_cutoff init 15000
+instr ReverbSC
+aleft init 0
+aright init 0
+aleft inleta "inleft"
+aright inleta "inright"
+; aoutL, aoutR reverbsc ainL, ainR, kfblvl, kfco[, israte[, ipitchm[, iskip]]]
+aleft, aright reverbsc aleft, aright, gk_Reverb_feedback, gk_Reverb_frequency_cutoff, sr, gi_Reverb_delay_modulation
+outleta "outleft", aleft
+outleta "outright", aright
+prints "ReverbSC       i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\\n", p1, p2, p3, p4, p5, p7, active(p1)
+endin
+
+gk_MasterOutput_level init 0
+gS_MasterOutput_filename init ""
+instr MasterOutput
+aleft inleta "inleft"
+aright inleta "inright"
+k_gain = ampdb(gk_MasterOutput_level)
+printks2 "Master gain: %f\n", k_gain
+iamp init 1
+iattack init .01
+idecay init 10
+isustain = 2400 - (iattack + idecay)
+aenvelope transeg 0.0, iattack / 2.0, 1.5, iamp / 2.0, iattack / 2.0, -1.5, iamp, isustain, 0.0, iamp, idecay / 2.0, 1.5, iamp / 2.0, idecay / 2.0, -1.5, 0
+aleft butterlp aleft, 18000
+aright butterlp aright, 18000
+outs aleft * k_gain * aenvelope, aright * k_gain * aenvelope
+; We want something that will play on my phone.
+i_amplitude_adjustment = ampdbfs(-3) / 32767
+i_filename_length strlen gS_MasterOutput_filename
+if i_filename_length > 0 then
+prints sprintf("Output filename: %s\n", gS_MasterOutput_filename)
+fout gS_MasterOutput_filename, 18, aleft * i_amplitude_adjustment, aright * i_amplitude_adjustment
+endif
+prints "MasterOutput   i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\n", p1, p2, p3, p4, p5, p7, active(p1)
 endin
 
 </CsInstruments>
@@ -640,16 +727,12 @@ f 0 360
         chord.setDuration(-1);
         chord.setVelocity(60);
         chord.setChannelsToVoices();
+        chord.setPansToVoices();
         var modality = chord.clone();
         console.log(chord.information());
         var prior_chord = chord.clone();
         var prior_score = new Silencio.Score();
         var score = new Silencio.Score();
-        function csoundMessage(text) {
-            var Log_cell = document.getElementById('console');
-            Log_cell.value += text;
-            Log_cell.scrollTop = Log_cell.scrollHeight;
-         }
         function updateTimeCell() {
             var score_time_cell = document.getElementById('Time_cell');
             if (typeof csound === 'undefined') {
@@ -708,7 +791,7 @@ f 0 360
             gk_FM_Clang_level: 0,
             Play: function() {
                 try {
-                    csound = get_csound(csoundMessage);
+                    csound = get_csound(csound_message_callback);
                     if (csound_audio_node === null) {
                          return;
                     }
@@ -716,6 +799,7 @@ f 0 360
                     let csd = document.getElementById('csd').value;
                     csound.Stop();
                     csound.SetOption("-odac")
+                    csound.SetOption("--0dbfs=15")
                     csound.SetOption("--ksmps=128")
                     csound.SetOption("--nchnls=2")
                     csound.SetOption("--nchnls_i=1")
@@ -743,10 +827,6 @@ f 0 360
             Hide: function() {
                 $("#dat_gui").toggle();
                 $("#statistics").toggle();
-            },
-            PlayChord: function() {
-            },
-            PlayChordWithVoiceleading: function() {
             },
         };        
         window.onload = function() {
@@ -782,6 +862,13 @@ f 0 360
             add_slider(Droner, 'gk_Droner_partial4', 0, 1);
             add_slider(Droner, 'gk_Droner_partial5', 0, 1);
             add_slider(Droner, 'gk_Droner_level', -80, 80);
+            var FMDroner = intruments.addFolder('Droner');
+            add_slider(FMDroner, 'gk_FMDroner_partial1', 0, 1);
+            add_slider(FMDroner, 'gk_FMDroner_partial2', 0, 1);
+            add_slider(FMDroner, 'gk_FMDroner_partial3', 0, 1);
+            add_slider(FMDroner, 'gk_FMDroner_partial4', 0, 1);
+            add_slider(FMDroner, 'gk_FMDroner_partial5', 0, 1);
+            add_slider(FMDroner, 'gk_FMDroner_level', -80, 80);
             var Harpsichord = intruments.addFolder('Harpsichord');
             add_slider(Harpsichord, 'gk_Harpsichord_level', -80, 80);
             var Phaser = intruments.addFolder('Phaser');
@@ -802,13 +889,9 @@ f 0 360
             add_slider(Sweeper, 'gk_Sweeper_level', -80, 80);
             gui.revert();
             gui.domElement.id = 'dat_gui';
-            //gui.id = "dat_gui";
-            //flame.resize();
-            //div = document.getElementById('root');
-            //div.style.zIndex = -100;
         }
         function gk_update(name, value) {
-            if (csound !== null) {
+            if (typeof csound !== 'undefined' && csound !== null) {
                 var numberValue = parseFloat(value);
                 csound.SetControlChannel(name, numberValue);
                 csound.Message(name + ': ' + numberValue + '\n');
@@ -847,18 +930,11 @@ f 0 360
             (e.altKey ? ' +alt' : '') +
             (e.metaKey ? ' +meta' : '') + '\n';
 
-          var message = {data: data};
-          logMessage(message);
+          //var message = {data: data};
+          //logMessage(message);
         }
-        var toName = function(chord) {
-            name = "";
-            let voice;
-            let voices;
-            for (voice = 0, voices = chord.size(); voice < voices; voice++) {
-                name = name + "_" + Math.round(chord.voices[voice]);
-            }
-            return name;
-        }
+        var keyed_value = 0;
+        var keyed_sign = 1;
         $(document).on("keydown", function (e) {
             //printKey(e);
             e.preventDefault();
@@ -866,30 +942,38 @@ f 0 360
             var e_char = String.fromCharCode(e.keyCode || e.charCode);
             // Numbers (and pitch-classes) are 0 through b.
             // Shift key changes from 1 to -1.
-            let sign;
-            if (e.shiftKey === true) {
-                sign = -1;
-            } else {
-                sign = 1;
-            }
-            let value;
-            value = e.which - 48;
-            if (value > 9) {
-                value -= 7;
-            }
-            value *= sign;
-            console.log('value:' + value);
             if (e.ctrlKey === true) {
+                if (e.shiftKey === true) {
+                    keyed_sign = -1;
+                } else {
+                    keyed_sign = 1;
+                }
+                keyed_value = e.which - 48;
+                if (keyed_value > 9) {
+                    keyed_value -= 7;
+                }
+                keyed_value *= keyed_sign;
+            } else {
                 if        (e_char === 'H') {
                     parameters.Hide();
                 } else if (e_char === 'K') {
-                    chord = chord.K(modality);
+                    chord = chord.K();
                 } else if (e_char === 'P') {
                     parameters.Play();
                 } else if (e_char === 'S') {
                     parameters.Stop();
-                } else if (e_char === 'X') {
-                    parameters.Close();
+                } else if (e_char === 'I') {
+                    chord = chord.I();
+                } else if (e_char === 'R') {
+                    let i;
+                    let n = Math.abs(keyed_value);
+                    for (i = 0; i < n; i++) {
+                        chord = chord.v(keyed_sign);
+                    }
+                } else if (e_char === 'Q') {
+                    chord = chord.Q(keyed_value, modality);
+                } else if (e_char === 'T') {
+                    chord = chord.T(keyed_value);
                 } else if (e_char === 'C') {
                     // Turn off prior chord.
                     prior_score.clear();
@@ -898,13 +982,15 @@ f 0 360
                     // Turn on current chord with indefinite duration.
                     score.clear();
                     chord = chord.er(72).T(24);
-                    console.log(chord.information());
+                    // console.log(chord.information());
                     ChordSpace.insert(score, chord, 0);
                     score.sendToCsound(csound);
                     // Save current chord as prior chord.
                     prior_chord = chord.clone();
-                    let name = toName(chord);
+                    let name = chord.toName();
                     flame.updateName(name);
+                    let chord_cell = document.getElementById("Chord_cell");
+                    chord_cell.innerHTML = name;
                 } else if (e_char === 'V') {
                     // Turn off prior chord.
                     prior_score.clear();
@@ -912,23 +998,14 @@ f 0 360
                     prior_score.turnoffInCsound(csound);
                     // Turn on current chord with indefinite duration.
                     score.clear();
-                    chord = ChordSpace.voiceleadingSimpler(prior_chord, chord, true);
-                    console.log(chord.information());
+                    chord = ChordSpace.voiceleadingClosestRange(prior_chord, chord, 72, true);
+                    // console.log(chord.information());
                     ChordSpace.insert(score, chord, 0);
                     score.sendToCsound(csound);
                     // Save current chord as prior chord.
                     prior_chord = chord.clone();
-                    let name = toName(chord);
+                    let name = chord.toName();
                     flame.updateName(name);
-                } else {
-                    chord = chord.T(value);
-                }
-            } else if (e.altKey === true) {
-                chord = chord.Q(value, modality);
-            } else {
-                let n = Math.abs(value);
-                for (let i = 0; i < n; i++) {
-                    chord = chord.v(sign);
                 }
             }
         });
