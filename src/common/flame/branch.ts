@@ -14,10 +14,8 @@ export interface Branch {
 export function applyBranch(branch: Branch, point: THREE.Vector3, color: THREE.Color) {
     // apply the affine transform to the point
     branch.affine(point);
-
     // apply the nonlinear variation to the point
     branch.variation(point);
-
     // interpolate towards the affine color
     // color.lerp(affine.color, 0.5);
     color.add(branch.color);

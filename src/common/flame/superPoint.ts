@@ -21,8 +21,9 @@ export class SuperPoint {
     }
 
     public updateSubtree(depth: number, ...visitors: UpdateVisitor[]) {
-        if (depth === 0) { return; }
-
+        if (depth === 0) { 
+            return; 
+        }
         if (this.children === undefined) {
             this.children = this.branches.map(() => {
                 return new SuperPoint(
@@ -33,7 +34,6 @@ export class SuperPoint {
                 );
             });
         }
-
         for (let idx = 0, l = this.children.length; idx < l; idx++) {
             SuperPoint.globalSubtreeIterationIndex++;
             const child = this.children[idx];
@@ -43,18 +43,15 @@ export class SuperPoint {
             child.point.copy(this.point);
             child.color.copy(this.color);
             applyBranch(branch, child.point, child.color);
-
             // take far away points and move them into the center again to keep points from getting too out of hand
             if (child.point.lengthSq() > 50 * 50) {
                 VARIATIONS.Spherical(child.point);
             }
-
             if (SuperPoint.globalSubtreeIterationIndex % 307 === 0) {
                 for (const v of visitors) {
                     v.visit(child);
                 }
             }
-
             child.updateSubtree(depth - 1, ...visitors);
         }
     }

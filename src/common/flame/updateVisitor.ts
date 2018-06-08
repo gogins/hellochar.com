@@ -90,7 +90,6 @@ export class BoxCountVisitor implements UpdateVisitor {
 
     public computeCountAndCountDensity() {
         const { counts, densities, sideLengths } = this;
-
         // so we have three data points:
         // { volume: 1, count: 11 }, { volume: 1e-3, count: 341 }, { volume: 1e-6, count: 15154 }
         // the formula is roughly count = C * side^dimension
@@ -99,13 +98,10 @@ export class BoxCountVisitor implements UpdateVisitor {
         const logSideLengths = sideLengths.map((sideLength) => Math.log(sideLength));
         const logCounts = counts.map((count) => Math.log(count));
         const logDensities = densities.map((density) => Math.log(density));
-
         const slopeCount = -this.linearRegressionSlope(logSideLengths, logCounts);
         const slopeDensity = -this.linearRegressionSlope(logSideLengths, logDensities);
-
         // count ranges from 0.5 in the extremely shunken case (aaaaa) to 2.8 in a really spaced out case
         // much of it is ~2; anything < 1.7 is very linear/1D
-
         // countDensity ranges from 3.5 (adsfadsfa) really spaced out to ~6 which is extremely tiny
         // much of it ranges from 3.5 to like 4.5
         // it's a decent measure of how "dense" the fractal is

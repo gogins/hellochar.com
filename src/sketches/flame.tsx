@@ -137,7 +137,7 @@ function computeDepth() {
     // MKG: Zhang's original was not dense enough for me.
     const depth = (globalBranches.length === 1)
         ? 1000
-        : Math.floor(Math.log(1000000) / Math.log(globalBranches.length));
+        : Math.floor(Math.log(100000) / Math.log(globalBranches.length));
     return depth;
 }
 
