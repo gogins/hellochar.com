@@ -241,6 +241,8 @@ class Flame extends ISketch {
     }
 
     public updateName(name: string = "Han") {
+        let parts = name.split(" ");
+        name = parts.join("");
         const { origin, pathname } = window.location;
         const newUrl = `${origin}${pathname}?name=${name}`;
         window.history.replaceState({}, null!, newUrl);

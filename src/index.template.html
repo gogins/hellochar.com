@@ -278,21 +278,22 @@ prints "Blower         i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d\n", 
 ;printks "Blower         i %9.4f t %9.4f d %9.4f k %9.4f v %9.4f p %9.4f #%3d l%9.4f r%9.4f\n", 1, p1, p2, p3, p4, p5, p7, active(p1), dbamp(rms(a_out_left)), dbamp(rms(a_out_right))
 endin
 
-//////////////////////////////////////////////
-// Original by Steven Yi.
-// Adapted by Michael Gogins.
-//////////////////////////////////////////////
 gk_FMWaterBell_level init 0
 gi_FMWaterBell_attack init 0.002
 gi_FMWaterBell_release init 0.01
 gi_FMWaterBell_sustain init 20
-gk_FMWaterBell_index init .3
+gi_FMWaterBell_sustain_level init .1
+gk_FMWaterBell_index init .5
 gk_FMWaterBell_crossfade init .5
 gk_FMWaterBell_vibrato_depth init 0.05
 gk_FMWaterBell_vibrato_rate init 6
 gk_FMWaterBell_midi_dynamic_range init 127
 gi_FMWaterBell_cosine ftgen 0, 0, 65536, 11, 1
 instr FMWaterBell
+//////////////////////////////////////////////
+// Original by Steven Yi.
+// Adapted by Michael Gogins.
+//////////////////////////////////////////////
 i_instrument = p1
 i_time = p2
 i_duration = p3
@@ -313,10 +314,8 @@ i_normalization = ampdb(-i_level_correction) / 2
 i_amplitude = ampdb(i_midi_velocity) * i_normalization
 k_gain = ampdb(gk_FMWaterBell_level)
 a_signal fmbell	1, i_frequency, gk_FMWaterBell_index, gi_FMWaterBell_sustain, gk_FMWaterBell_vibrato_depth, gk_FMWaterBell_vibrato_rate, gi_FMWaterBell_cosine, gi_FMWaterBell_cosine, gi_FMWaterBell_cosine, gi_FMWaterBell_cosine, gi_FMWaterBell_cosine, gi_FMWaterBell_sustain
-a_declicking linsegr 0, gi_FMWaterBell_attack, 1, i_sustain, 1, gi_FMWaterBell_release, 0
-;printk 1, k(a_declicking), 1
-a_signal = a_signal * i_amplitude * k_gain
-;printk 1, k(a_signal), 1
+a_envelope transegr 0, gi_FMWaterBell_attack, -6, 1, i_sustain, -12, gi_FMWaterBell_sustain_level, gi_FMWaterBell_release, -6, 0
+a_signal = a_signal * i_amplitude * a_envelope * k_gain
 #ifdef USE_SPATIALIZATION
 a_spatial_reverb_send init 0
 a_bsignal[] init 16
@@ -1035,15 +1034,15 @@ f 0 360
                 e.preventDefault();
                 e.stopPropagation();
             }
+            if (e.shiftKey === true) {
+                keyed_sign = -1;
+            } else {
+                keyed_sign = 1;
+            }
             var e_char = String.fromCharCode(e.keyCode || e.charCode);
             // Numbers (and pitch-classes) are 0 through b.
             // Shift key changes from 1 to -1.
             if (e.ctrlKey === true) {
-                if (e.shiftKey === true) {
-                    keyed_sign = -1;
-                } else {
-                    keyed_sign = 1;
-                }
                 keyed_value = e.which - 48;
                 if (keyed_value > 9) {
                     keyed_value -= 7;
@@ -1102,16 +1101,12 @@ f 0 360
                     chord = chord.K();
                 } else if (e_char === 'L') {
                     let velocity = chord.getVelocity();
-                    velocity = velocity + 4;
-                    chord.setVelocity(velocity);
-                } else if (e_char === 'M') {
-                    let velocity = chord.getVelocity();
-                    velocity = velocity - 4;
+                    velocity = velocity + (4 * keyed_sign);
                     chord.setVelocity(velocity);
                 } else if (e_char === 'P') {
                     parameters.Play();
                 } else if (e_char === 'Q') {
-                    chord = chord.Q(keyed_value, modality);
+                    chord = chord.Q(1, modality);
                 } else if (e_char === 'R') {
                     let i;
                     let n = Math.abs(keyed_value);
@@ -1120,6 +1115,8 @@ f 0 360
                     }
                 } else if (e_char === 'S') {
                     parameters.Stop();
+                } else if (e_char === 'T') {
+                    chord = chord.T(1 * keyed_sign);
                 } else if (e_char === 'V') {
                     // Turn off prior chord.
                     prior_score.clear();
