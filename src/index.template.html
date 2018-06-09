@@ -777,7 +777,7 @@ k_gain = ampdb(gk_MasterOutput_level)
 iamp init 1
 iattack init .01
 idecay init 10
-isustain = 2400 - (iattack + idecay)
+isustain = (60 * 6) - (iattack + idecay)
 aenvelope transeg 0.0, iattack / 2.0, 1.5, iamp / 2.0, iattack / 2.0, -1.5, iamp, isustain, 0.0, iamp, idecay / 2.0, 1.5, iamp / 2.0, idecay / 2.0, -1.5, 0
 aleft butterlp aleft, 18000
 aright butterlp aright, 18000
@@ -804,10 +804,12 @@ f 0 360
         var gui = null;
         var score_time_started = 0.;
         var score_time = 0.;
-        var chord = new ChordSpace.Chord([36, 48, 55, 59, 64]);
+        var chord = new ChordSpace.Chord([36, 50, 55, 59, 64]);
         chord.setDuration(-1);
         chord.setVelocity(60);
         chord.setChannelsToVoices();
+        var onsets = [1/16, 2/16, 3/16, 4/16, 5/16, 6/16, 7/16, 8/16, 9/16];
+        //chord.setChannel(3);
         chord.setPansToVoices();
         var modality = chord.clone();
         console.log(chord.information());
@@ -826,24 +828,28 @@ f 0 360
             score_time_cell.innerHTML = score_time.toFixed(4);
             setTimeout(updateTimeCell, 1000);
         };
+        var random_selection = function(array) {
+            let index = Math.floor(Math.random() * array.length);
+            return array[index];
+        }
         var parameters = {
-        "gk_Reverb_feedback": 0.95,
-        "gk_MasterOutput_level": 40,
+        "gk_Reverb_feedback": 0.9284424065582881,
+        "gk_MasterOutput_level": 32.98040850354313,
         "gk_Blower_grainDensity": 36.73410819342804,
         "gk_Blower_grainDuration": 0.2,
         "gk_Blower_grainAmplitudeRange": 40.40751901277084,
         "gk_Blower_grainFrequencyRange": 0.033,
-        "gk_Blower_level": 31.67168890802124,
-        "gk_Bower_pressure": 3.927536231884058,
-        "gk_Bower_level": -5.062419285406804,
+        "gk_Blower_level": 0.8117249154453248,
+        "gk_Bower_pressure": 4.653889515219842,
+        "gk_Bower_level": 3.6978579481397986,
         "gk_Buzzer_harmonics": 15,
         "gk_Buzzer_level": 0,
-        "gk_Droner_partial1": 0.11938585162864113,
-        "gk_Droner_partial2": 0.5050939876596355,
-        "gk_Droner_partial3": 0.12856937867699814,
-        "gk_Droner_partial4": 0.3673410819342804,
-        "gk_Droner_partial5": 0.1,
-        "gk_Droner_level": -0.6543263021954431,
+        "gk_Droner_partial1": 0.2254791431792559,
+        "gk_Droner_partial2": 0.6674182638105975,
+        "gk_Droner_partial3": 0.08117249154453213,
+        "gk_Droner_partial4": 0.7215332581736189,
+        "gk_Droner_partial5": 0.09019165727170236,
+        "gk_Droner_level": -6.403607666290867,
         "gk_FMDroner_partial1": 0.22958817620892524,
         "gk_FMDroner_partial2": 0.23877170325728225,
         "gk_FMDroner_partial3": 0.5601951499497776,
@@ -858,8 +864,8 @@ f 0 360
         "gi_FMWaterBell_attack": 0.002,
         "gi_FMWaterBell_release": 0.01,
         "gi_FMWaterBell_sustain": 20,
-        "gk_FMWaterBell_index": 0.3,
-        "gk_FMWaterBell_crossfade": 0.4509582863585118,
+        "gk_FMWaterBell_index": 3.42728297632469,
+        "gk_FMWaterBell_crossfade": 9.109357384441939,
         "gk_FMWaterBell_vibrato_depth": 0.36076662908680945,
         "gk_FMWaterBell_vibrato_rate": 6,
         "gk_FMWaterBell_level": 12.35625704622322,
@@ -882,7 +888,7 @@ f 0 360
                     csound.SetOption("--ksmps=128")
                     csound.SetOption("--nchnls=2")
                     csound.SetOption("--nchnls_i=1")
-                    csound.SetOption("--sample-rate=48000")
+                    csound.SetOption("--sample-rate=44100")
                     csound.CompileCsdText(csd);
                     csound.Start();
                     gui.revert();
@@ -931,7 +937,7 @@ f 0 360
             add_slider(Blower, 'gk_Blower_grainFrequencyRange', 0, 100);
             add_slider(Blower, 'gk_Blower_level', -80, 80);
             var Bower = intruments.addFolder('Bower');
-            add_slider(Bower, 'gk_Bower_pressure', 0, 5);
+            add_slider(Bower, 'gk_Bower_pressure', 0, 6);
             add_slider(Bower, 'gk_Bower_level', -80, 80);
             var Buzzer = intruments.addFolder('Buzzer');
             add_slider(Buzzer, 'gk_Buzzer_harmonics', 0, 20);
@@ -1044,26 +1050,31 @@ f 0 360
                 }
                 keyed_value *= keyed_sign;
             } else {
-                if        (e_char === 'H') {
-                    parameters.Hide();
-                } else if (e_char === 'K') {
-                    chord = chord.K();
-                } else if (e_char === 'P') {
-                    parameters.Play();
-                } else if (e_char === 'S') {
-                    parameters.Stop();
-                } else if (e_char === 'I') {
-                    chord = chord.I();
-                } else if (e_char === 'R') {
+                if        (e_char === 'A') {
+                    // Turn off prior chord.
+                    prior_score.clear();
+                    ChordSpace.insert(prior_score, prior_chord, 0);
+                    prior_score.turnoffInCsound(csound);
+                    // Turn on current chord with indefinite duration.
+                    score.clear();
+                    chord = chord.er(72).T(24);
+                    // console.log(chord.information());
+                    ChordSpace.insert(score, chord, 0);
+                    // Arpeggiate the chord.
                     let i;
-                    let n = Math.abs(keyed_value);
+                    let n = chord.size();
+                    onset = 0;
                     for (i = 0; i < n; i++) {
-                        chord = chord.v(keyed_sign);
+                        onset += random_selection(onsets) * 2;
+                        score.data[i].time = onset;
                     }
-                } else if (e_char === 'Q') {
-                    chord = chord.Q(keyed_value, modality);
-                } else if (e_char === 'T') {
-                    chord = chord.T(keyed_value);
+                    score.sendToCsound(csound);
+                    // Save current chord as prior chord.
+                    prior_chord = chord.clone();
+                    let name = chord.toName();
+                    flame.updateName(name);
+                    let chord_cell = document.getElementById("Chord_cell");
+                    chord_cell.innerHTML = name;
                 } else if (e_char === 'C') {
                     // Turn off prior chord.
                     prior_score.clear();
@@ -1081,6 +1092,34 @@ f 0 360
                     flame.updateName(name);
                     let chord_cell = document.getElementById("Chord_cell");
                     chord_cell.innerHTML = name;
+                } else if (e_char === 'D') {
+                    chord = chord.T(5);
+                } else if (e_char === 'H') {
+                    parameters.Hide();
+                } else if (e_char === 'I') {
+                    chord = chord.I();
+                } else if (e_char === 'K') {
+                    chord = chord.K();
+                } else if (e_char === 'L') {
+                    let velocity = chord.getVelocity();
+                    velocity = velocity + 4;
+                    chord.setVelocity(velocity);
+                } else if (e_char === 'M') {
+                    let velocity = chord.getVelocity();
+                    velocity = velocity - 4;
+                    chord.setVelocity(velocity);
+                } else if (e_char === 'P') {
+                    parameters.Play();
+                } else if (e_char === 'Q') {
+                    chord = chord.Q(keyed_value, modality);
+                } else if (e_char === 'R') {
+                    let i;
+                    let n = Math.abs(keyed_value);
+                    for (i = 0; i < n; i++) {
+                        chord = chord.v(keyed_sign);
+                    }
+                } else if (e_char === 'S') {
+                    parameters.Stop();
                 } else if (e_char === 'V') {
                     // Turn off prior chord.
                     prior_score.clear();
@@ -1096,6 +1135,29 @@ f 0 360
                     prior_chord = chord.clone();
                     let name = chord.toName();
                     flame.updateName(name);
+                } else if (e_char === 'W') {
+                    // First revoice.
+                    let i;
+                    let n = Math.abs(keyed_value);
+                    for (i = 0; i < n; i++) {
+                        chord = chord.v(keyed_sign);
+                    }
+                    // Then turn off prior chord.
+                    prior_score.clear();
+                    ChordSpace.insert(prior_score, prior_chord, 0);
+                    prior_score.turnoffInCsound(csound);
+                    // Turn on current chord with indefinite duration.
+                    score.clear();
+                    chord = chord.er(72).T(24);
+                    // console.log(chord.information());
+                    ChordSpace.insert(score, chord, 0);
+                    score.sendToCsound(csound);
+                    // Save current chord as prior chord.
+                    prior_chord = chord.clone();
+                    let name = chord.toName();
+                    flame.updateName(name);
+                    let chord_cell = document.getElementById("Chord_cell");
+                    chord_cell.innerHTML = name;
                 }
             }
         });
